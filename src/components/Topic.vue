@@ -1,25 +1,31 @@
 <template>
     <div class="topic-container">
-        <div class="header">
-            <h2>文章详情</h2>
-            <el-button type="primary" @click="goBack">返回</el-button>
-        </div>
-        <div class="content-wrapper">
-            <div class="markdown-content" ref="markdownRef" v-html="htmlContent">
+        <el-scrollbar class="scrollbar-demo" ref="scrollbarRef">
+            <div class="header">
+                &nbsp;
+                <h2>文章详情</h2>
+                <el-button type="primary" @click="goBack">返回</el-button>
             </div>
-            <!-- 锚点容器 -->
-            <div class="anchor-container" v-if="anchors.length > 0">
-                <div class="anchor-title">文章目录</div>
-                <div class="anchor-list">
-                    <div v-for="anchor in anchors" :key="anchor.id"
-                        :class="['anchor-item', { 'active': activeAnchor === anchor.id }]"
-                        :style="{ paddingLeft: `${(anchor.level - 1) * 15}px` }" @click="scrollToAnchor(anchor.id)">
-                        {{ anchor.text }}
+            <div class="content-wrapper">
+                <div class="markdown-content" ref="markdownRef" v-html="htmlContent">
+                </div>
+                <!-- 锚点容器 -->
+                <div class="anchor-container" v-if="anchors.length > 0">
+                    <div class="anchor-title">文章目录</div>
+                    <div class="anchor-list">
+                        <div v-for="anchor in anchors" :key="anchor.id"
+                            :class="['anchor-item', { 'active': activeAnchor === anchor.id }]"
+                            :style="{ paddingLeft: `${(anchor.level - 1) * 15}px` }" @click="scrollToAnchor(anchor.id)">
+                            {{ anchor.text }}
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
+            <!-- 评论组件 -->
+            <Comment :article-id="1" @update:comment-count="updateCommentCount" />
+        </el-scrollbar>
     </div>
+
 </template>
 
 <script setup>
@@ -27,6 +33,7 @@ import { ref, computed, onMounted, watch, nextTick } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElButton } from 'element-plus'
 import { marked } from 'marked'
+import Comment from './Comment.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -186,13 +193,13 @@ const scrollToAnchor = (id) => {
 // 监听滚动，高亮当前锚点
 const handleScroll = () => {
     if (!markdownRef.value || anchors.value.length === 0) return
-    
+
     // 获取markdown内容容器的滚动位置
     const markdownRect = markdownRef.value.getBoundingClientRect()
     const scrollPosition = window.scrollY + window.innerHeight / 3 // 调整滚动位置，使用视口高度的1/3作为判断点
-    
+
     let currentActive = ''
-    
+
     // 从后往前检查，找到第一个可见的标题
     for (let i = anchors.value.length - 1; i >= 0; i--) {
         const anchor = anchors.value[i]
@@ -201,7 +208,7 @@ const handleScroll = () => {
             const elementRect = element.getBoundingClientRect()
             // 计算元素相对于文档顶部的位置
             const elementTop = elementRect.top + window.scrollY
-            
+
             // 当标题进入视口1/3位置时，高亮该锚点
             if (elementTop <= scrollPosition) {
                 currentActive = anchor.id
@@ -209,12 +216,18 @@ const handleScroll = () => {
             }
         }
     }
-    
+
     activeAnchor.value = currentActive
 }
 
 const goBack = () => {
     router.go(-1) // 返回上一页
+}
+
+// 更新评论数量
+const updateCommentCount = (count) => {
+    // 这里可以更新文章的评论数量
+    console.log('评论数量:', count)
 }
 
 // 监听htmlContent变化，重新提取锚点
@@ -277,7 +290,7 @@ onMounted(() => {
     border: 1px solid var(--border-color);
     border-radius: 8px;
     padding: 15px;
-    max-height: 60vh;
+    max-height: 70vh;
     overflow-y: auto;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
@@ -355,6 +368,16 @@ onMounted(() => {
     margin: 0.83em 0;
     color: var(--text-primary);
 }
+
+/* 评论输入框 */
+.comment-input {
+    margin-top: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+
 
 /* 响应式设计 */
 @media (max-width: 1024px) {

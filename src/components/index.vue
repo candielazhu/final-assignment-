@@ -3,11 +3,10 @@
         <Header />
         <div class="content">
             <Aside />
-            <router-view />
+            <router-view style="width: 60%;"/>
         </div>
     </div>
 </template>
-
 
 <script setup>
 import Aside from './Aside.vue'
@@ -27,6 +26,7 @@ import Header from './Header.vue'
 .content {
     display: flex;
     flex-direction: row;
+    justify-content: center;
     height: calc(100vh - 60px);
     background-color: var(--bg-primary);
 }
