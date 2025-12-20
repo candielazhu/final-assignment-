@@ -12,6 +12,9 @@
                 <el-form-item label="标题">
                     <el-input v-model="form.title" placeholder="请输入文章标题" />
                 </el-form-item>
+                <el-form-item label="副标题">
+                    <el-input v-model="form.title" placeholder="请输入文章副标题" />
+                </el-form-item>
                 <el-form-item label="内容">
                     <el-input
                         v-model="form.content"
