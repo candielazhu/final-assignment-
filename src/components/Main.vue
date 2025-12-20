@@ -13,7 +13,7 @@ import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 
 const router = useRouter()
-const num = ref(130)
+const num = ref(30)
 
 const loadMore = (direction) => {
     if (direction === 'bottom') {

@@ -11,13 +11,9 @@
             <div class="anchor-container" v-if="anchors.length > 0">
                 <div class="anchor-title">文章目录</div>
                 <div class="anchor-list">
-                    <div 
-                        v-for="anchor in anchors" 
-                        :key="anchor.id"
+                    <div v-for="anchor in anchors" :key="anchor.id"
                         :class="['anchor-item', { 'active': activeAnchor === anchor.id }]"
-                        :style="{ paddingLeft: `${(anchor.level - 1) * 15}px` }"
-                        @click="scrollToAnchor(anchor.id)"
-                    >
+                        :style="{ paddingLeft: `${(anchor.level - 1) * 15}px` }" @click="scrollToAnchor(anchor.id)">
                         {{ anchor.text }}
                     </div>
                 </div>
@@ -83,6 +79,55 @@ const sampleMarkdown = `# 文章标题
 这是文章的最后一部分，总结了主要内容。  
 这是文章的最后一部分，总结了主要内容。  
 这是文章的最后一部分，总结了主要内容。  
+
+# 期末考核项目
+
+## 项目介绍
+这是一个基于Vue 3 + Vite的期末考核项目，包含登录和注册功能，采用了现代化的样式设计和组件化开发方式。
+
+## 技术栈
+- Vue 3
+- Vite
+- Vue Router 4
+- Element Plus
+- CSS3
+
+## 主要功能
+1. **用户登录**：支持用户名密码登录
+2. **用户注册**：支持新用户注册
+3. **样式隔离**：登录和注册组件采用了scoped样式和唯一前缀，确保样式不相互影响
+4. **响应式设计**：适配不同屏幕尺寸
+5. **现代化UI**：采用了水滴形状的设计风格
+
+## 主要依赖
+
+## 运行方式
+
+### 安装依赖
+
+### 启动开发服务器
+### 构建生产版本
+
+### 预览生产版本
+
+## 项目结构
+
+## 样式设计
+- 采用了水滴形状的现代化设计
+- 实现了组件间的样式隔离
+- 使用了CSS3的阴影、过渡和变换效果
+- 响应式布局设计
+
+## 开发说明
+- 组件采用了Vue 3的Composition API
+- 使用了Element Plus的消息提示组件
+- 采用了Vue Router进行路由管理
+- 实现了基本的表单验证
+- 使用localStorage和Cookie存储用户信息
+
+## 版权说明
+本项目仅用于期末考核，请勿用于商业用途。
+
 `
 
 // 锚点相关数据
@@ -104,25 +149,25 @@ const htmlContent = computed(() => {
 // 提取标题并生成锚点
 const extractAnchors = () => {
     if (!markdownRef.value) return
-    
+
     const headings = markdownRef.value.querySelectorAll('h1, h2, h3, h4, h5, h6')
     const newAnchors = []
-    
+
     headings.forEach(heading => {
         const level = parseInt(heading.tagName[1])
         const text = heading.textContent.trim()
         const id = generateId(text)
-        
+
         // 给标题添加ID
         heading.id = id
-        
+
         newAnchors.push({
             id,
             text,
             level
         })
     })
-    
+
     anchors.value = newAnchors
 }
 
@@ -141,10 +186,10 @@ const scrollToAnchor = (id) => {
 // 监听滚动，高亮当前锚点
 const handleScroll = () => {
     if (!markdownRef.value) return
-    
+
     const scrollPosition = window.scrollY + 100
     let currentActive = ''
-    
+
     // 从后往前检查，找到第一个可见的标题
     for (let i = anchors.value.length - 1; i >= 0; i--) {
         const anchor = anchors.value[i]
@@ -154,7 +199,7 @@ const handleScroll = () => {
             break
         }
     }
-    
+
     activeAnchor.value = currentActive
 }
 
@@ -306,7 +351,7 @@ onMounted(() => {
     .content-wrapper {
         flex-direction: column;
     }
-    
+
     .anchor-container {
         width: 100%;
         position: static;

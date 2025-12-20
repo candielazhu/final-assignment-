@@ -2,7 +2,8 @@
     <div class="aside">
         <el-row class="tac">
             <el-col width="100%">
-                <el-menu default-active="2" class="el-menu-vertical-demo" @open="handleOpen" @close="handleClose" @select="handleSelect">
+                <el-menu default-active="2" class="el-menu-vertical-demo" @open="handleOpen" @close="handleClose"
+                    @select="handleSelect">
                     <el-menu-item index="2" :route="{ name: 'Main' }">
                         <el-icon>
                             <CoffeeCup />
@@ -42,7 +43,7 @@
 
 
 <script setup>
-import { 
+import {
     Location,
     Setting,
     CoffeeCup,
