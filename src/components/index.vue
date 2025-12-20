@@ -40,12 +40,30 @@ const checkLoginStatus = () => {
     const localStorageLoggedIn = localStorage.getItem('isLoggedIn') === 'true'
     isLoggedIn.value = cookieLoggedIn || localStorageLoggedIn
     
-    // 模拟用户信息
+    // 从localStorage获取真实用户信息
     if (isLoggedIn.value) {
-        userInfo.username = '当前用户'
-        userInfo.avatar = ''
-        userInfo.role = 'user'
+        const savedUserInfo = localStorage.getItem('userInfo')
+        if (savedUserInfo) {
+            try {
+                const parsedUserInfo = JSON.parse(savedUserInfo)
+                userInfo.username = parsedUserInfo.username || '用户'
+                userInfo.avatar = parsedUserInfo.avatar || ''
+                userInfo.role = parsedUserInfo.role || 'user'
+            } catch (error) {
+                console.error('解析用户信息失败:', error)
+                // 解析失败时使用默认值
+                userInfo.username = '用户'
+                userInfo.avatar = ''
+                userInfo.role = 'user'
+            }
+        } else {
+            // 没有保存的用户信息时使用默认值
+            userInfo.username = '用户'
+            userInfo.avatar = ''
+            userInfo.role = 'user'
+        }
     } else {
+        // 未登录时清空用户信息
         userInfo.username = ''
         userInfo.avatar = ''
         userInfo.role = ''
