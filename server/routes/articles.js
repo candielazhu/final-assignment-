@@ -8,4 +8,7 @@ router.get('/articles', articleController.getArticles);
 // 获取文章详情
 router.get('/articles/:id', articleController.getArticleById);
 
+// 创建文章
+router.post('/articles', articleController.createArticle);
+
 module.exports = router;
