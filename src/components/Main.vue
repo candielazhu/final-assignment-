@@ -3,12 +3,17 @@
         <el-scrollbar height="100%" @end-reached="loadMore">
             <div v-if="articles.list.length > 0">
                 <div v-for="article in articles.list" :key="article.id" class="article-item" @click="goToTopic(article)">
-                    <h3>{{ article.title }}</h3>
-                    <p class="article-summary">{{ article.summary }}</p>
-                    <div class="article-meta">
-                        <span>{{ article.author }}</span>
-                        <span>{{ article.createTime }}</span>
-                        <span>{{ article.commentCount }} 评论</span>
+                    <div class="article-main">
+                        <div class="article-title-row">
+                            <h3>{{ article.title }}</h3>
+                            <el-tag v-if="article.status === 'draft'" type="info" size="small">草稿</el-tag>
+                        </div>
+                        <p class="article-summary">{{ article.summary }}</p>
+                        <div class="article-meta">
+                            <span>{{ article.author_name || article.author }}</span>
+                            <span>{{ formatDate(article.created_at || article.createTime) }}</span>
+                            <span>{{ (article.comment_count || article.commentCount) }} 评论</span>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -30,24 +35,12 @@ import { useRouter } from 'vue-router'
 import { ElSkeleton } from 'element-plus'
 import request from '../axios/request'
 
-
 const router = useRouter()
 
 // 文章列表数据
 const articles = ref({
     list: []
 })
-const getData =function(){
-    request({
-        url:'/articles',
-        method:'get'
-    }).then(res=>{
-        articles.value.list = res.data.data
-        console.log(res.data.data)
-    }).catch(err=>{
-        console.log(err)
-    })
-}
 
 // 加载状态
 const loading = ref(false)
@@ -55,6 +48,40 @@ const loading = ref(false)
 const page = ref(1)
 const pageSize = ref(10)
 const hasMore = ref(true)
+
+// 日期格式化函数
+const formatDate = (dateString) => {
+    if (!dateString) return ''
+    const date = new Date(dateString)
+    return date.toLocaleDateString() + ' ' + date.toLocaleTimeString()
+}
+
+// 获取文章数据
+const getData = function() {
+    request({
+        url: '/articles',
+        method: 'get'
+    }).then(res => {
+        let articleList = res.data.data
+        
+        // 排序：草稿文章置顶，已发布文章按创建时间倒序
+        articleList.sort((a, b) => {
+            // 先按状态排序，草稿排在前面
+            if (a.status === 'draft' && b.status !== 'draft') return -1
+            if (a.status !== 'draft' && b.status === 'draft') return 1
+            
+            // 状态相同，按创建时间倒序
+            const dateA = new Date(a.created_at || a.createTime)
+            const dateB = new Date(b.created_at || b.createTime)
+            return dateB - dateA
+        })
+        
+        articles.value.list = articleList
+        console.log(res.data.data)
+    }).catch(err => {
+        console.log(err)
+    })
+}
 
 // 加载文章列表
 const fetchArticles = async () => {
@@ -107,15 +134,31 @@ onMounted(() => {
 .article-item {
     padding: 20px;
     margin-bottom: 20px;
-    display: flex;
-    flex-direction: row;
-    justify-content: space-between;
-    align-items: center;
     background-color: var(--bg-secondary);
     border-radius: 8px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
     cursor: pointer;
     transition: all 0.3s ease;
+}
+
+.article-main {
+    width: 100%;
+}
+
+.article-title-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.article-title-row h3 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--text-primary);
+    flex: 1;
+    margin-right: 10px;
 }
 
 .article-item:hover {
