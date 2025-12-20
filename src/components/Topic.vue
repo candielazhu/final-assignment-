@@ -160,7 +160,7 @@ const fetchArticleDetail = async () => {
     try {
         // 使用mock接口获取文章详情
         const response = await request({
-            url: `/mock/getarticle/${id}`,
+            url: `/articles/${id}`,
             method: 'get'
         })
         

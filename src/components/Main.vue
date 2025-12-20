@@ -39,7 +39,7 @@ const articles = ref({
 })
 const getData =function(){
     request({
-        url:'/mock/getarticles',
+        url:'/articles',
         method:'get'
     }).then(res=>{
         articles.value.list = res.data.data
