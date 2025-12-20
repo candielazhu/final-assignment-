@@ -62,13 +62,6 @@ const fetchArticles = async () => {
 
     loading.value = true
     try {
-        // 后期替换为真实API调用
-        // const response = await axios.get('/api/articles', {
-        //     params: { page: page.value, pageSize: pageSize.value }
-        // })
-        // articles.value = [...articles.value, ...response.data.articles]
-        // hasMore.value = articles.value.length < response.data.total
-
         // 临时模拟，后期删除
         articles.value.list = []
         hasMore.value = false
@@ -93,7 +86,7 @@ const loadMore = (direction) => {
 const goToTopic = (article) => {
     router.push({
         name: 'Topic',
-        params: { id: article.id }
+        params: { item: article.Topic, id: article.id }
     })
 }
 
