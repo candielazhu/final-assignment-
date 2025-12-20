@@ -3,15 +3,34 @@
         <div class="login-drop">
             <div class="login-content">
                 <h2>登录</h2>
-                <form>
+                <form @submit.prevent="handleLogin">
                     <div class="login-inputBox">
-                        <input type="text" placeholder="用户名" v-model="username" />
+                        <input 
+                            type="text" 
+                            placeholder="用户名" 
+                            v-model="loginForm.username" 
+                            :class="{ 'error': errors.username }"
+                            @keyup.enter="handleLogin"
+                        />
+                        <div v-if="errors.username" class="error-message">{{ errors.username }}</div>
                     </div>
                     <div class="login-inputBox">
-                        <input type="password" placeholder="密码" v-model="password" @keyup.enter="handleLogin" />
+                        <input 
+                            type="password" 
+                            placeholder="密码" 
+                            v-model="loginForm.password" 
+                            :class="{ 'error': errors.password }"
+                            @keyup.enter="handleLogin"
+                        />
+                        <div v-if="errors.password" class="error-message">{{ errors.password }}</div>
                     </div>
                     <div class="login-inputBox">
-                        <input type="button" value="登录" @click="handleLogin" />
+                        <input 
+                            type="submit" 
+                            value="登录" 
+                            :disabled="loading"
+                            class="login-btn"
+                        />
                     </div>
                 </form>
             </div>
@@ -23,41 +42,91 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, reactive } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
+import request from '../axios/request'
 
 // 定义响应式数据
-const username = ref('')
-const password = ref('')
+const loginForm = reactive({
+    username: '',
+    password: ''
+})
+
+const errors = reactive({})
+const loading = ref(false)
 
 // 获取路由实例
 const router = useRouter()
 
+// 表单验证
+const validateForm = () => {
+    let isValid = true
+    const newErrors = {}
+
+    // 用户名验证
+    if (!loginForm.username) {
+        newErrors.username = '用户名不能为空'
+        isValid = false
+    }
+
+    // 密码验证
+    if (!loginForm.password) {
+        newErrors.password = '密码不能为空'
+        isValid = false
+    } else if (loginForm.password.length < 6) {
+        newErrors.password = '密码长度不能少于6个字符'
+        isValid = false
+    }
+
+    // 更新错误信息
+    Object.assign(errors, newErrors)
+    return isValid
+}
+
 // 登录处理函数
-const handleLogin = () => {
-    // 默认账号登录
-    if (username.value === 'admin' && password.value === '123456') {
-        // 登录成功，设置登录状态
-        localStorage.setItem('isLoggedIn', 'true')
-        setCookie('isLoggedIn', 'true', 7)
-        ElMessage.success('登录成功！')
-        router.push('/') // 跳转到首页
+const handleLogin = async () => {
+    // 表单验证
+    if (!validateForm()) {
         return
     }
 
-    // 检查是否为注册用户
-    const registeredUsers = JSON.parse(getCookie('registeredUsers') || '[]')
-    const user = registeredUsers.find(u => u.username === username.value && u.password === password.value)
+    loading.value = true
 
-    if (user) {
-        // 登录成功，设置登录状态
-        localStorage.setItem('isLoggedIn', 'true')
-        setCookie('isLoggedIn', 'true', 7)
-        ElMessage.success('登录成功！')
-        router.push('/') // 跳转到首页
-    } else {
-        ElMessage.error('账号或密码错误！')
+    try {
+        // 调用后端登录API
+        const response = await request({
+            url: '/users/login',
+            method: 'post',
+            data: {
+                username: loginForm.username,
+                password: loginForm.password
+            }
+        })
+
+        if (response.data.code === 200) {
+            // 登录成功，设置登录状态
+            localStorage.setItem('isLoggedIn', 'true')
+            setCookie('isLoggedIn', 'true', 7)
+            
+            // 保存用户信息
+            localStorage.setItem('userInfo', JSON.stringify(response.data.data))
+            
+            ElMessage.success('登录成功！')
+            router.push('/') // 跳转到首页
+        } else {
+            ElMessage.error(response.data.message || '登录失败')
+        }
+    } catch (error) {
+        console.error('登录错误:', error)
+        
+        if (error.response?.data?.code === 401) {
+            ElMessage.error('用户名或密码错误')
+        } else {
+            ElMessage.error('登录失败，请稍后重试')
+        }
+    } finally {
+        loading.value = false
     }
 }
 
@@ -67,15 +136,6 @@ const setCookie = (name, value, days) => {
     expires.setTime(expires.getTime() + days * 24 * 60 * 60 * 1000)
     document.cookie = `${name}=${value};expires=${expires.toUTCString()};path=/`
 }
-
-const getCookie = (name) => {
-    const value = `; ${document.cookie}`
-    const parts = value.split(`; ${name}=`)
-    if (parts.length === 2) return parts.pop().split(';').shift()
-    return ''
-}
-
-
 </script>
 
 <style scoped>
@@ -92,8 +152,8 @@ const getCookie = (name) => {
 /* 大水珠的外形 */
 .login-container .login-drop {
     position: relative;
-    width: 350px;
-    height: 350px;
+    width: 400px;
+    height: 400px;
     box-shadow: inset 20px 20px 20px rgba(0, 0, 0, 0.05),
         25px 35px 20px rgba(0, 0, 0, 0.05), 25px 35px 30px rgba(0, 0, 0, 0.05),
         inset -20px -20px 25px rgba(255, 255, 255, 0.9);
@@ -145,32 +205,37 @@ const getCookie = (name) => {
     text-align: center;
     padding: 40px;
     gap: 15px;
+    width: 100%;
 }
 
 /* 字体颜色大小 */
 .login-container .login-drop .login-content h2 {
     position: relative;
     color: #333;
-    font-size: 1.5em;
+    font-size: 1.8em;
+    margin-bottom: 20px;
 }
 
 /* 用display隔开账号\密码\登录 */
 .login-container .login-drop .login-content form {
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 20px;
     justify-content: center;
     align-items: center;
+    width: 100%;
 }
 
 /* 让账号\密码\登录拥有一个椭圆形外形 */
 .login-container .login-drop .login-content form .login-inputBox {
     position: relative;
-    width: 170px;
+    width: 220px;
     box-shadow: inset 2px 5px 10px rgba(0, 0, 0, 0.1),
         inset -2px -5px 10px rgba(255, 255, 255, 1),
         15px 15px 10px rgba(0, 0, 0, 0.05), 15px 10px 15px rgba(0, 0, 0, 0.025);
     border-radius: 25px;
+    padding: 5px 0;
+    margin-bottom: 10px;
 }
 
 /* 让账号\密码\登录按钮拥有反光效果 */
@@ -195,6 +260,28 @@ const getCookie = (name) => {
     width: 100%;
     font-size: 1em;
     padding: 8px 15px;
+    transition: all 0.3s ease;
+}
+
+/* 错误状态样式 */
+.login-container .login-drop .login-content form .login-inputBox input.error {
+    color: #ff0f5b;
+    background: rgba(255, 15, 91, 0.05);
+}
+
+/* 错误信息样式 */
+.error-message {
+    position: absolute;
+    bottom: -20px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 0.75em;
+    color: #ff0f5b;
+    white-space: nowrap;
+    background: rgba(255, 15, 91, 0.1);
+    padding: 2px 8px;
+    border-radius: 10px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 }
 
 /* 修改登录按钮的字体 */
@@ -205,21 +292,20 @@ const getCookie = (name) => {
     cursor: pointer;
     letter-spacing: 0.1em;
     font-weight: 500;
+    transition: all 0.3s ease;
+    padding: 10px 15px;
 }
 
-/* 修改注册按钮的字体 */
-.login-container .login-drop .login-content form .login-inputBox input[type='button'] {
-    color: #fff;
-    text-transform: uppercase;
-    font-size: 1em;
-    cursor: pointer;
-    letter-spacing: 0.1em;
-    font-weight: 500;
+/* 禁用状态 */
+.login-container .login-drop .login-content form .login-inputBox input[type='submit']:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+    transform: scale(0.95);
 }
 
 /* 最后一个box的形状和颜色 */
 .login-container .login-drop .login-content form .login-inputBox:nth-last-child(1) {
-    width: 120px;
+    width: 150px;
     background: #ff0f5b;
     box-shadow: inset 2px 5px 10px rgba(0, 0, 0, 0.1),
         15px 15px 10px rgba(0, 0, 0, 0.05), 15px 10px 15px rgba(0, 0, 0, 0.025);
@@ -228,7 +314,7 @@ const getCookie = (name) => {
 
 /* 倒数第一个box的鼠标经过 */
 .login-container .login-drop .login-content form .login-inputBox:nth-last-child(1):hover {
-    width: 150px;
+    width: 180px;
 }
 
 .login-btns {

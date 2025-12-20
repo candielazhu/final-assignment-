@@ -2,6 +2,7 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const articlesRouter = require('./routes/articles');
+const usersRouter = require('./routes/users'); // 导入用户路由
 const { testConnection } = require('./db');
 
 const app = express();
@@ -13,7 +14,8 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // 路由
-app.use('/api', articlesRouter);
+app.use('/api/articles', articlesRouter); // 文章相关路由
+app.use('/api/users', usersRouter); // 用户相关路由
 
 // 测试路由
 app.get('/', (req, res) => {
