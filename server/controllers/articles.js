@@ -10,7 +10,7 @@ async function getArticles(req, res) {
     const sql = `
       SELECT 
         a.id, a.title, a.summary, a.category_id, a.user_id as author_id, 
-        a.view_count as reading, a.comment_count, a.created_at, a.updated_at,
+        a.view_count as reading, a.comment_count, a.created_at, a.updated_at, a.status,
         c.name as category_name,
         u.username as author_name
       FROM articles a
@@ -45,7 +45,7 @@ async function getArticleById(req, res) {
     const sql = `
       SELECT 
         a.id, a.title, a.summary, a.category_id, a.user_id as author_id, 
-        a.view_count as reading, a.comment_count, a.created_at, a.updated_at,
+        a.view_count as reading, a.comment_count, a.created_at, a.updated_at, a.status,
         c.name as category_name,
         u.username as author_name
       FROM articles a

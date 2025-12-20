@@ -63,6 +63,7 @@ const getData = function() {
         method: 'get'
     }).then(res => {
         let articleList = res.data.data
+        console.log('获取到的文章数据:', articleList)
         
         // 排序：草稿文章置顶，已发布文章按创建时间倒序
         articleList.sort((a, b) => {
@@ -77,7 +78,6 @@ const getData = function() {
         })
         
         articles.value.list = articleList
-        console.log(res.data.data)
     }).catch(err => {
         console.log(err)
     })
