@@ -13,27 +13,31 @@ const routes = [
     path: '/',
     name: 'Index',
     component: () => import('./components/Index.vue'),
-    meta: { requiresAuth: true }, // 需要登录才能访问
+    meta: { requiresAuth: false }, // 允许未登录用户访问
     children: [
       {
         path: '', // 默认子路由
         name: 'Main',
-        component: () => import('./components/Main.vue')
+        component: () => import('./components/Main.vue'),
+        meta: { requiresAuth: false } // 允许未登录用户访问
       },
       {
         path: 'topic/:item/:id',
         name: 'Topic',
-        component: () => import('./components/Topic.vue')
+        component: () => import('./components/Topic.vue'),
+        meta: { requiresAuth: false } // 允许未登录用户访问
       },
       {
         path: 'topic/:item',
         name: 'TopicWithItem',
-        component: () => import('./components/Topic.vue')
+        component: () => import('./components/Topic.vue'),
+        meta: { requiresAuth: false } // 允许未登录用户访问
       },
       {
         path: 'write',
         name: 'Write',
-        component: () => import('./components/Write.vue')
+        component: () => import('./components/Write.vue'),
+        meta: { requiresAuth: true } // 需要登录才能访问
       }
     ]
   },
@@ -62,6 +66,13 @@ const router = createRouter({
 
 // 路由守卫，检查登录状态
 router.beforeEach((to, from, next) => {
+  // 检查是否是初始访问（from.name为空表示从外部进入）
+  if (!from.name && to.path !== '/') {
+    // 初始访问，重定向到index页面
+    next('/')
+    return
+  }
+  
   // 检查路由是否需要认证
   if (to.matched.some(record => record.meta.requiresAuth)) {
     // 检查是否已登录
@@ -69,7 +80,8 @@ router.beforeEach((to, from, next) => {
     if (isLoggedIn) {
       next() // 已登录，继续访问
     } else {
-      next('/login') // 未登录，重定向到登录页面
+      // 如果是访问需要认证的页面但未登录，重定向到登录页
+      next('/login')
     }
   } else {
     next() // 不需要认证的路由，直接访问

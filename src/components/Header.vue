@@ -1,16 +1,29 @@
 <template>
     <div class="header">
-        <el-avatar :icon="UserFilled" />
-        <el-input v-model="input" style="width: 480px" placeholder="搜索" />
         <div>
-            <el-button 
-                type="primary" 
-                @click="handleAuthButtonClick" 
-                plain
-            >
-                {{ isLoggedIn ? '退出登录' : '登录' }}
-            </el-button>
             <el-switch v-model="value1" @change="handleThemeChange" />
+        </div>
+        <div>
+            <el-input v-model="input" style="width: 480px" placeholder="搜索" />
+            <el-button @click="handleSearch" style="margin-left: 10px;">
+                <el-icon>
+                    <Search />
+                </el-icon>
+            </el-button>
+        </div>
+        <div class="user">
+            <el-popover placement="bottom" trigger="hover" width="120">
+                <template #reference>
+                    <el-avatar :icon="UserFilled" style="cursor: pointer;" />
+                </template>
+                <div style="text-align: center; padding: 10px 0;">
+                    <el-menu class="el-menu-vertical-demo" @select="handleSelect">
+                        <el-menu-item index="1" @click="handleAuthButtonClick">
+                            {{ isLoggedIn ? '退出登录' : '登录' }}
+                        </el-menu-item>
+                    </el-menu>
+                </div>
+            </el-popover>
         </div>
     </div>
 </template>
@@ -65,7 +78,8 @@ const logout = () => {
     localStorage.removeItem('isLoggedIn')
     document.cookie = 'isLoggedIn=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;'
     ElMessage.success('已退出登录')
-    router.push('/login')
+    // 使用window.location.href跳转到首页并刷新
+    window.location.href = '/'
 }
 
 // 初始化主题和登录状态
@@ -74,10 +88,10 @@ onMounted(() => {
     const savedTheme = localStorage.getItem('theme')
     const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches
     const isDark = savedTheme ? savedTheme === 'dark' : systemDark
-    
+
     value1.value = isDark
     toggleTheme()
-    
+
     // 检查登录状态
     checkLoginStatus()
 })
