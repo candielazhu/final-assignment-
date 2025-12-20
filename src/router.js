@@ -22,14 +22,8 @@ const routes = [
         meta: { requiresAuth: false } // 允许未登录用户访问
       },
       {
-        path: 'topic/:item/:id',
+        path: 'topic/:id',
         name: 'Topic',
-        component: () => import('./components/Topic.vue'),
-        meta: { requiresAuth: false } // 允许未登录用户访问
-      },
-      {
-        path: 'topic/:item',
-        name: 'TopicWithItem',
         component: () => import('./components/Topic.vue'),
         meta: { requiresAuth: false } // 允许未登录用户访问
       },

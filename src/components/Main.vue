@@ -113,7 +113,7 @@ const loadMore = (direction) => {
 const goToTopic = (article) => {
     router.push({
         name: 'Topic',
-        params: { item: article.Topic, id: article.id }
+        params: { id: article.id }
     })
 }
 
