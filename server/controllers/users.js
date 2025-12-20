@@ -1,11 +1,4 @@
 const { executeQuery } = require('../db');
-const bcrypt = require('bcrypt');
-
-// 加密密码的函数
-const hashPassword = async (password) => {
-  const saltRounds = 10;
-  return await bcrypt.hash(password, saltRounds);
-};
 
 // 注册新用户
 async function registerUser(req, res) {
@@ -53,16 +46,13 @@ async function registerUser(req, res) {
       });
     }
     
-    // 加密密码
-    const hashedPassword = await hashPassword(password);
-    
-    // 插入新用户
+    // 直接存储明文密码（不加密）
     const insertSql = `
       INSERT INTO users (username, PASSWORD, email) 
       VALUES (?, ?, ?)
     `;
     
-    await executeQuery(insertSql, [username, hashedPassword, email]);
+    await executeQuery(insertSql, [username, password, email]);
     
     res.status(201).json({
       code: 200,
@@ -104,10 +94,8 @@ async function loginUser(req, res) {
     
     const user = users[0];
     
-    // 验证密码
-    const passwordMatch = await bcrypt.compare(password, user.PASSWORD);
-    
-    if (!passwordMatch) {
+    // 直接比较明文密码（不加密）
+    if (password !== user.PASSWORD) {
       return res.status(401).json({
         code: 401,
         message: '用户名或密码错误'

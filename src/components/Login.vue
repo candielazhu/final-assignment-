@@ -74,8 +74,8 @@ const validateForm = () => {
     if (!loginForm.password) {
         newErrors.password = '密码不能为空'
         isValid = false
-    } else if (loginForm.password.length < 6) {
-        newErrors.password = '密码长度不能少于6个字符'
+    } else if (loginForm.password.length < 3) {
+        newErrors.password = '密码长度不能少于3个字符'
         isValid = false
     }
 

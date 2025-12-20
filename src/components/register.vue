@@ -3,18 +3,54 @@
         <div class="register-drop">
             <div class="register-content">
                 <h2>注册</h2>
-                <form>
+                <form @submit.prevent="handleRegister">
                     <div class="register-inputBox">
-                        <input type="text" placeholder="用户名" v-model="username" />
+                        <input 
+                            type="text" 
+                            placeholder="用户名" 
+                            v-model="registerForm.username" 
+                            :class="{ 'error': errors.username }"
+                            @keyup.enter="handleRegister"
+                        />
+                        <div v-if="errors.username" class="error-message">{{ errors.username }}</div>
                     </div>
                     <div class="register-inputBox">
-                        <input type="password" placeholder="密码" v-model="password" />
+                        <input 
+                            type="email" 
+                            placeholder="邮箱" 
+                            v-model="registerForm.email" 
+                            :class="{ 'error': errors.email }"
+                            @keyup.enter="handleRegister"
+                        />
+                        <div v-if="errors.email" class="error-message">{{ errors.email }}</div>
                     </div>
                     <div class="register-inputBox">
-                        <input type="password" placeholder="确认密码" v-model="confirmPassword" />
+                        <input 
+                            type="password" 
+                            placeholder="密码" 
+                            v-model="registerForm.password" 
+                            :class="{ 'error': errors.password }"
+                            @keyup.enter="handleRegister"
+                        />
+                        <div v-if="errors.password" class="error-message">{{ errors.password }}</div>
                     </div>
                     <div class="register-inputBox">
-                        <input type="button" value="注册" @click="handleRegister" />
+                        <input 
+                            type="password" 
+                            placeholder="确认密码" 
+                            v-model="registerForm.confirmPassword" 
+                            :class="{ 'error': errors.confirmPassword }"
+                            @keyup.enter="handleRegister"
+                        />
+                        <div v-if="errors.confirmPassword" class="error-message">{{ errors.confirmPassword }}</div>
+                    </div>
+                    <div class="register-inputBox">
+                        <input 
+                            type="submit" 
+                            value="注册" 
+                            :disabled="loading"
+                            @click="handleRegister" 
+                        />
                     </div>
                 </form>
             </div>
@@ -25,71 +61,111 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, reactive } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
+import request from '../axios/request'
 
 // 定义响应式数据
-const username = ref('')
-const password = ref('')
-const confirmPassword = ref('')
+const registerForm = reactive({
+    username: '',
+    email: '',
+    password: '',
+    confirmPassword: ''
+})
+
+const errors = reactive({})
+const loading = ref(false)
 
 // 获取路由实例
 const router = useRouter()
 
+// 表单验证
+const validateForm = () => {
+    let isValid = true
+    const newErrors = {}
+
+    // 用户名验证
+    if (!registerForm.username) {
+        newErrors.username = '用户名不能为空'
+        isValid = false
+    }
+
+    // 邮箱验证
+    if (!registerForm.email) {
+        newErrors.email = '邮箱不能为空'
+        isValid = false
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(registerForm.email)) {
+        newErrors.email = '请输入有效的邮箱地址'
+        isValid = false
+    }
+
+    // 密码验证
+    if (!registerForm.password) {
+        newErrors.password = '密码不能为空'
+        isValid = false
+    } else if (registerForm.password.length < 3) {
+        newErrors.password = '密码长度不能少于3个字符'
+        isValid = false
+    }
+
+    // 确认密码验证
+    if (!registerForm.confirmPassword) {
+        newErrors.confirmPassword = '请确认密码'
+        isValid = false
+    } else if (registerForm.password !== registerForm.confirmPassword) {
+        newErrors.confirmPassword = '两次输入的密码不一致'
+        isValid = false
+    }
+
+    // 更新错误信息
+    Object.assign(errors, newErrors)
+    return isValid
+}
+
 // 注册处理函数
-const handleRegister = () => {
+const handleRegister = async () => {
     // 表单验证
-    if (!username.value || !password.value || !confirmPassword.value) {
-        ElMessage.error('请填写所有必填字段！')
+    if (!validateForm()) {
         return
     }
 
-    if (password.value !== confirmPassword.value) {
-        ElMessage.error('两次输入的密码不一致！')
-        return
+    loading.value = true
+
+    try {
+        // 调用后端注册API
+        const response = await request({
+            url: '/users/register',
+            method: 'post',
+            data: {
+                username: registerForm.username,
+                email: registerForm.email,
+                password: registerForm.password
+            }
+        })
+
+        if (response.data.code === 200) {
+            ElMessage.success('注册成功！')
+            router.push('/login') // 跳转到登录页面
+        } else {
+            // 处理后端返回的验证错误
+            if (response.data.errors) {
+                Object.assign(errors, response.data.errors)
+            }
+            ElMessage.error(response.data.message || '注册失败')
+        }
+    } catch (error) {
+        console.error('注册错误:', error)
+        
+        if (error.response?.data?.errors) {
+            Object.assign(errors, error.response.data.errors)
+        }
+        
+        ElMessage.error('注册失败，请稍后重试')
+    } finally {
+        loading.value = false
     }
-
-    // 检查用户名是否已存在
-    const registeredUsers = JSON.parse(getCookie('registeredUsers') || '[]')
-    const existingUser = registeredUsers.find(u => u.username === username.value)
-
-    if (existingUser) {
-        ElMessage.error('用户名已存在！')
-        return
-    }
-
-    // 创建新用户
-    const newUser = {
-        username: username.value,
-        password: password.value
-    }
-
-    // 添加到用户列表
-    registeredUsers.push(newUser)
-
-    // 保存到Cookie
-    setCookie('registeredUsers', JSON.stringify(registeredUsers), 7)
-
-    ElMessage.success('注册成功！')
-    router.push('/login') // 跳转到登录页面
 }
-
-// Cookie操作函数
-const setCookie = (name, value, days) => {
-    const expires = new Date()
-    expires.setTime(expires.getTime() + days * 24 * 60 * 60 * 1000)
-    document.cookie = `${name}=${value};expires=${expires.toUTCString()};path=/`
-}
-
-const getCookie = (name) => {
-    const value = `; ${document.cookie}`
-    const parts = value.split(`; ${name}=`)
-    if (parts.length === 2) return parts.pop().split(';').shift()
-    return ''
-}
-
-
 </script>
 
 <style scoped>
@@ -211,14 +287,44 @@ const getCookie = (name) => {
     padding: 8px 15px;
 }
 
+/* 错误状态样式 */
+.register-container .register-drop .register-content form .register-inputBox input.error {
+    color: #ff0f5b;
+    background: rgba(255, 15, 91, 0.05);
+}
+
+/* 错误信息样式 */
+.error-message {
+    position: absolute;
+    bottom: -20px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 0.75em;
+    color: #ff0f5b;
+    white-space: nowrap;
+    background: rgba(255, 15, 91, 0.1);
+    padding: 2px 8px;
+    border-radius: 10px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
 /* 修改注册按钮的字体 */
-.register-container .register-drop .register-content form .register-inputBox input[type='button'] {
+.register-container .register-drop .register-content form .register-inputBox input[type='submit'] {
     color: #fff;
     text-transform: uppercase;
     font-size: 1em;
     cursor: pointer;
     letter-spacing: 0.1em;
     font-weight: 500;
+    transition: all 0.3s ease;
+    padding: 8px 15px;
+}
+
+/* 禁用状态 */
+.register-container .register-drop .register-content form .register-inputBox input[type='submit']:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+    transform: scale(0.95);
 }
 
 /* 最后一个box的形状和颜色 */
