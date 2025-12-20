@@ -120,10 +120,14 @@ const saveArticle = async (status) => {
     try {
         await formRef.value.validate()
         
+        // 获取当前登录用户信息
+        const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}')
+        
         // 准备提交数据
         const articleData = {
             ...form,
             status: status,
+            user_id: userInfo.id || 1, // 使用当前用户ID，如果没有则使用默认值1
             // html_content 会在后端生成
             html_content: ''
         }

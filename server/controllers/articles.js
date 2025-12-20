@@ -113,8 +113,8 @@ async function createArticle(req, res) {
     // 将Markdown转换为HTML
     const html_content = marked(content);
     
-    // 模拟用户ID（实际应该从登录状态获取）
-    const user_id = 1; // 暂时使用固定用户ID
+    // 使用前端传递的用户ID，如果没有则使用默认值1
+    const user_id = req.body.user_id || 1;
     
     // 插入文章到数据库
     const sql = `
