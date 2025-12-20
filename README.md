@@ -37,7 +37,13 @@
 - ✅ 文章列表展示（从云数据库获取）
 - ✅ 文章详情查看（支持Markdown渲染）
 - ✅ 文章发布功能（登录后可用）
+- ✅ 文章编辑功能（仅作者可用）
+- ✅ 文章删除功能（仅作者可用，带确认弹窗）
+- ✅ 文章草稿功能（支持保存为草稿和发布）
+- ✅ 文章状态管理（草稿/已发布）
 - ✅ 文章锚点导航（支持#、##、###标题）
+- ✅ 草稿置顶显示（在文章列表中）
+- ✅ 草稿标签显示（在文章列表中）
 
 ### 3. 评论系统
 - ✅ 独立的评论组件（Comment.vue）
@@ -116,9 +122,12 @@ npm run preview
 .
 ├── server/                  # 后端服务目录
 │   ├── controllers/         # 控制器
-│   │   └── articles.js      # 文章控制器
+│   │   ├── articles.js      # 文章控制器（增删改查）
+│   │   └── users.js         # 用户控制器（登录注册）
 │   ├── routes/              # 路由
-│   │   └── articles.js      # 文章路由
+│   │   ├── articles.js      # 文章路由（RESTful API）
+│   │   ├── categories.js    # 分类路由
+│   │   └── users.js         # 用户路由
 │   ├── .env                 # 环境变量配置（已加入gitignore）
 │   ├── db.js                # 数据库连接配置
 │   ├── index.js             # 后端入口文件
@@ -127,6 +136,15 @@ npm run preview
 │   ├── axios/               # Axios配置
 │   │   └── request.js       # 请求拦截与配置
 │   ├── components/          # 组件
+│   │   ├── Aside.vue        # 侧边栏导航
+│   │   ├── Comment.vue      # 评论组件
+│   │   ├── Header.vue       # 顶部导航栏
+│   │   ├── Index.vue        # 首页容器
+│   │   ├── Login.vue        # 登录组件
+│   │   ├── Main.vue         # 文章列表
+│   │   ├── Register.vue     # 注册组件
+│   │   ├── Topic.vue        # 文章详情
+│   │   └── Write.vue        # 文章编写
 │   ├── mock/                # Mock数据
 │   ├── services/            # 服务相关
 │   │   ├── articles/        # Markdown文章内容
@@ -136,6 +154,13 @@ npm run preview
 │   ├── router.js            # 路由配置
 │   └── style.css            # 全局样式
 ├── database/                # 数据库设计
+│   ├── schema.sql           # 完整数据库结构
+│   ├── users.sql            # 用户表结构
+│   ├── articles.sql         # 文章表结构
+│   ├── comments.sql         # 评论表结构
+│   ├── categories.sql       # 分类表结构
+│   ├── tags.sql             # 标签表结构
+│   └── article_tags.sql     # 文章标签关联表
 ├── .gitignore               # Git忽略配置
 ├── package.json             # 前端依赖配置
 └── vite.config.js           # Vite配置
@@ -166,16 +191,24 @@ npm run preview
 ### 已实现的API接口
 
 #### 文章相关接口
-- `GET /api/articles` - 获取文章列表
-- `GET /api/articles/:id` - 获取文章详情
+- `GET /api/articles` - 获取文章列表（支持草稿置顶）
+- `GET /api/articles/:id` - 获取文章详情（支持Markdown渲染）
+- `POST /api/articles` - 创建文章（支持草稿和发布）
+- `PUT /api/articles/:id` - 更新文章（仅作者可用）
+- `DELETE /api/articles/:id` - 删除文章（仅作者可用）
 
-#### 计划实现的接口
-- `POST /api/articles` - 创建文章
-- `PUT /api/articles/:id` - 更新文章
-- `DELETE /api/articles/:id` - 删除文章
+#### 分类相关接口
+- `GET /api/categories` - 获取分类列表
+
+#### 评论相关接口
 - `GET /api/articles/:id/comments` - 获取文章评论
 - `POST /api/articles/:id/comments` - 添加文章评论
-- `DELETE /api/comments/:id` - 删除评论
+- `DELETE /api/comments/:id` - 删除评论（支持作者和管理员删除）
+
+#### 用户相关接口
+- `POST /api/users/register` - 用户注册
+- `POST /api/users/login` - 用户登录
+- `POST /api/users/logout` - 用户退出登录
 
 ### 详细接口设计
 查看完整的API接口设计：[database-design.md](database-design.md)（第6节）
@@ -255,6 +288,16 @@ npm start
 6. **响应式设计**：适配各种设备尺寸
 7. **RESTful API设计**：规范的接口设计，便于后端对接
 8. **安全性考虑**：登录状态管理，权限控制，敏感信息保护
+9. **文章草稿功能**：支持保存为草稿和发布，草稿自动置顶显示
+10. **作者权限控制**：只有文章作者才能编辑和删除文章
+11. **优雅的确认机制**：使用Element Plus Popconfirm组件进行删除确认
+12. **锚点导航功能**：支持Markdown标题的自动锚点生成
+13. **文章内容左对齐**：优化阅读体验，符合用户阅读习惯
+14. **实时评论功能**：支持评论发布、回复和删除
+15. **数据库索引优化**：提高查询性能
+16. **环境变量管理**：敏感信息保护，支持不同环境配置
+17. **代码规范**：统一的代码风格，便于团队协作
+18. **完善的错误处理**：友好的错误提示，便于调试和维护
 
 ## 版权说明
 本项目仅用于期末考核，请勿用于商业用途。
