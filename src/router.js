@@ -61,12 +61,7 @@ const router = createRouter({
 // 路由守卫，检查登录状态
 router.beforeEach((to, from, next) => {
   // 检查是否是初始访问（from.name为空表示从外部进入）
-  if (!from.name && to.path !== '/') {
-    // 初始访问，重定向到index页面
-    next('/')
-    return
-  }
-  
+
   // 检查路由是否需要认证
   if (to.matched.some(record => record.meta.requiresAuth)) {
     // 检查是否已登录
