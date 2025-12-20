@@ -1,0 +1,97 @@
+const { executeQuery } = require('../db');
+const fs = require('fs');
+const path = require('path');
+
+// 获取文章列表
+async function getArticles(req, res) {
+  try {
+    // 从数据库获取文章列表
+    const sql = `
+      SELECT 
+        a.id, a.title, a.summary, a.category_id, a.user_id as author_id, 
+        a.view_count as reading, a.comment_count, a.created_at, a.updated_at,
+        c.name as category_name,
+        u.username as author_name
+      FROM articles a
+      LEFT JOIN categories c ON a.category_id = c.id
+      LEFT JOIN users u ON a.user_id = u.id
+      ORDER BY a.created_at DESC
+    `;
+    
+    const articles = await executeQuery(sql);
+    
+    res.json({
+      code: 200,
+      message: '获取成功',
+      data: articles,
+      total: articles.length
+    });
+  } catch (error) {
+    res.status(500).json({
+      code: 500,
+      message: '获取文章列表失败',
+      error: error.message
+    });
+  }
+}
+
+// 获取文章详情
+async function getArticleById(req, res) {
+  try {
+    const id = req.params.id;
+    
+    // 从数据库获取文章基本信息
+    const sql = `
+      SELECT 
+        a.id, a.title, a.summary, a.category_id, a.user_id as author_id, 
+        a.view_count as reading, a.comment_count, a.created_at, a.updated_at,
+        c.name as category_name,
+        u.username as author_name
+      FROM articles a
+      LEFT JOIN categories c ON a.category_id = c.id
+      LEFT JOIN users u ON a.user_id = u.id
+      WHERE a.id = ?
+    `;
+    
+    const articles = await executeQuery(sql, [id]);
+    
+    if (articles.length === 0) {
+      return res.status(404).json({
+        code: 404,
+        message: '文章不存在'
+      });
+    }
+    
+    const articleDetail = articles[0];
+    
+    // 读取对应id的markdown文件内容
+    const mdFilePath = path.join(__dirname, '../../src/services/articles', `${id}.md`);
+    let content = '';
+    
+    if (fs.existsSync(mdFilePath)) {
+      content = fs.readFileSync(mdFilePath, 'utf8');
+    } else {
+      content = `# ${articleDetail.title}\n\n这是${articleDetail.title}的详细内容，支持 **Markdown** 格式。`;
+    }
+    
+    res.json({
+      code: 200,
+      message: '获取成功',
+      data: {
+        ...articleDetail,
+        content: content
+      }
+    });
+  } catch (error) {
+    res.status(500).json({
+      code: 500,
+      message: '获取文章详情失败',
+      error: error.message
+    });
+  }
+}
+
+module.exports = {
+  getArticles,
+  getArticleById
+};
