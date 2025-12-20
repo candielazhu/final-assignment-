@@ -1,6 +1,7 @@
 const { executeQuery } = require('../db');
 const fs = require('fs');
 const path = require('path');
+const { marked } = require('marked');
 
 // 获取文章列表
 async function getArticles(req, res) {
@@ -91,7 +92,75 @@ async function getArticleById(req, res) {
   }
 }
 
+// 创建文章
+async function createArticle(req, res) {
+  try {
+    const { title, summary, content, category_id, status } = req.body;
+    
+    // 验证输入
+    if (!title || !content || !summary) {
+      return res.status(400).json({
+        code: 400,
+        message: '缺少必填字段',
+        errors: {
+          title: !title ? '标题不能为空' : undefined,
+          summary: !summary ? '摘要不能为空' : undefined,
+          content: !content ? '内容不能为空' : undefined
+        }
+      });
+    }
+    
+    // 将Markdown转换为HTML
+    const html_content = marked(content);
+    
+    // 模拟用户ID（实际应该从登录状态获取）
+    const user_id = 1; // 暂时使用固定用户ID
+    
+    // 插入文章到数据库
+    const sql = `
+      INSERT INTO articles (title, summary, content, html_content, category_id, user_id, status)
+      VALUES (?, ?, ?, ?, ?, ?, ?)
+    `;
+    
+    const result = await executeQuery(sql, [title, summary, content, html_content, category_id, user_id, status]);
+    
+    // 获取插入的文章ID
+    const articleId = result.insertId;
+    
+    // 可选：保存Markdown文件到服务器
+    const articlesDir = path.join(__dirname, '../../src/services/articles');
+    if (!fs.existsSync(articlesDir)) {
+      fs.mkdirSync(articlesDir, { recursive: true });
+    }
+    
+    const mdFilePath = path.join(articlesDir, `${articleId}.md`);
+    fs.writeFileSync(mdFilePath, content, 'utf8');
+    
+    res.json({
+      code: 200,
+      message: '文章保存成功',
+      data: {
+        id: articleId,
+        title,
+        summary,
+        content,
+        html_content,
+        category_id,
+        user_id,
+        status
+      }
+    });
+  } catch (error) {
+    res.status(500).json({
+      code: 500,
+      message: '创建文章失败',
+      error: error.message
+    });
+  }
+}
+
 module.exports = {
   getArticles,
-  getArticleById
+  getArticleById,
+  createArticle
 };
