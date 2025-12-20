@@ -207,29 +207,41 @@ const formatDate = (dateString) => {
 }
 
 // 提交评论
-const submitComment = () => {
+const submitComment = async () => {
     if (!commentForm.value.content.trim()) {
         ElMessage.warning('请输入评论内容')
         return
     }
     
-    // 模拟提交评论（实际项目中应调用API）
-    const newComment = {
-        id: Date.now(),
-        article_id: props.articleId,
-        user_id: currentUserId.value,
-        username: '当前用户',
-        content: commentForm.value.content.trim(),
-        parent_id: null,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-        children: []
+    try {
+        // 后期替换为真实API调用
+        // const response = await axios.post('/api/comments', {
+        //     article_id: props.articleId,
+        //     content: commentForm.value.content.trim(),
+        //     parent_id: null
+        // })
+        
+        // 临时模拟，后期删除
+        const newComment = {
+            id: Date.now(),
+            article_id: props.articleId,
+            user_id: currentUserId.value,
+            username: '当前用户',
+            content: commentForm.value.content.trim(),
+            parent_id: null,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+            children: []
+        }
+        
+        comments.value.unshift(newComment)
+        emit('update:commentCount', comments.value.length)
+        ElMessage.success('评论成功')
+        resetForm()
+    } catch (error) {
+        console.error('提交评论失败:', error)
+        ElMessage.error('评论失败，请稍后重试')
     }
-    
-    comments.value.unshift(newComment)
-    emit('update:commentCount', comments.value.length)
-    ElMessage.success('评论成功')
-    resetForm()
 }
 
 // 重置表单
@@ -245,32 +257,44 @@ const replyComment = (comment) => {
 }
 
 // 提交回复
-const submitReply = (parentComment) => {
+const submitReply = async (parentComment) => {
     if (!replyForm.value.content.trim()) {
         ElMessage.warning('请输入回复内容')
         return
     }
     
-    // 模拟提交回复（实际项目中应调用API）
-    const newReply = {
-        id: Date.now(),
-        article_id: props.articleId,
-        user_id: currentUserId.value,
-        username: '当前用户',
-        content: replyForm.value.content.trim(),
-        parent_id: parentComment.id,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
+    try {
+        // 后期替换为真实API调用
+        // const response = await axios.post('/api/comments', {
+        //     article_id: props.articleId,
+        //     content: replyForm.value.content.trim(),
+        //     parent_id: parentComment.id
+        // })
+        
+        // 临时模拟，后期删除
+        const newReply = {
+            id: Date.now(),
+            article_id: props.articleId,
+            user_id: currentUserId.value,
+            username: '当前用户',
+            content: replyForm.value.content.trim(),
+            parent_id: parentComment.id,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+        }
+        
+        // 添加回复到父评论
+        if (!parentComment.children) {
+            parentComment.children = []
+        }
+        parentComment.children.push(newReply)
+        emit('update:commentCount', comments.value.length)
+        ElMessage.success('回复成功')
+        cancelReply()
+    } catch (error) {
+        console.error('提交回复失败:', error)
+        ElMessage.error('回复失败，请稍后重试')
     }
-    
-    // 添加回复到父评论
-    if (!parentComment.children) {
-        parentComment.children = []
-    }
-    parentComment.children.push(newReply)
-    emit('update:commentCount', comments.value.length)
-    ElMessage.success('回复成功')
-    cancelReply()
 }
 
 // 取消回复
@@ -281,20 +305,28 @@ const cancelReply = () => {
 }
 
 // 删除评论
-const deleteComment = (commentId) => {
-    // 模拟删除评论（实际项目中应调用API）
-    comments.value = comments.value.filter(comment => {
-        if (comment.id === commentId) {
-            return false
-        }
-        // 删除子评论
-        if (comment.children) {
-            comment.children = comment.children.filter(child => child.id !== commentId)
-        }
-        return true
-    })
-    emit('update:commentCount', comments.value.length)
-    ElMessage.success('删除成功')
+const deleteComment = async (commentId) => {
+    try {
+        // 后期替换为真实API调用
+        // await axios.delete(`/api/comments/${commentId}`)
+        
+        // 临时模拟，后期删除
+        comments.value = comments.value.filter(comment => {
+            if (comment.id === commentId) {
+                return false
+            }
+            // 删除子评论
+            if (comment.children) {
+                comment.children = comment.children.filter(child => child.id !== commentId)
+            }
+            return true
+        })
+        emit('update:commentCount', comments.value.length)
+        ElMessage.success('删除成功')
+    } catch (error) {
+        console.error('删除评论失败:', error)
+        ElMessage.error('删除失败，请稍后重试')
+    }
 }
 
 // 跳转到登录页
@@ -302,45 +334,20 @@ const toLogin = () => {
     router.push('/login')
 }
 
-// 模拟获取评论数据
-const fetchComments = () => {
-    // 实际项目中应调用API获取评论列表
-    comments.value = [
-        {
-            id: 1,
-            article_id: props.articleId,
-            user_id: 1,
-            username: '用户1',
-            content: '这篇文章写得很好，很有启发性！',
-            parent_id: null,
-            created_at: '2025-12-19T10:30:00Z',
-            updated_at: '2025-12-19T10:30:00Z',
-            children: [
-                {
-                    id: 2,
-                    article_id: props.articleId,
-                    user_id: 2,
-                    username: '用户2',
-                    content: '同意，我也有同样的感受！',
-                    parent_id: 1,
-                    created_at: '2025-12-19T11:00:00Z',
-                    updated_at: '2025-12-19T11:00:00Z'
-                }
-            ]
-        },
-        {
-            id: 3,
-            article_id: props.articleId,
-            user_id: 3,
-            username: '用户3',
-            content: '非常感谢分享，学到了很多！',
-            parent_id: null,
-            created_at: '2025-12-19T14:20:00Z',
-            updated_at: '2025-12-19T14:20:00Z',
-            children: []
-        }
-    ]
-    emit('update:commentCount', comments.value.length)
+// 获取评论数据
+const fetchComments = async () => {
+    try {
+        // 后期替换为真实API调用
+        // const response = await axios.get(`/api/comments?article_id=${props.articleId}`)
+        // comments.value = response.data.comments
+        
+        // 临时模拟，后期删除
+        comments.value = []
+        emit('update:commentCount', comments.value.length)
+    } catch (error) {
+        console.error('获取评论失败:', error)
+        ElMessage.error('获取评论失败，请稍后重试')
+    }
 }
 
 // 初始化
