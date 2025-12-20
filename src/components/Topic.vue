@@ -15,6 +15,7 @@
             <!-- 文章内容 -->
             <div v-else-if="article.id" class="content-wrapper">
                 <div class="markdown-content" ref="markdownRef" v-html="htmlContent">
+                    
                 </div>
                 <!-- 锚点容器 -->
                 <div class="anchor-container" v-if="anchors.length > 0">
@@ -47,6 +48,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { ElButton, ElSkeleton } from 'element-plus'
 import { marked } from 'marked'
 import Comment from './Comment.vue'
+import request from '../axios/request'
 
 const route = useRoute()
 const router = useRouter()
@@ -151,23 +153,21 @@ const handleScroll = () => {
 
 // 获取文章详情
 const fetchArticleDetail = async () => {
-    const id = route.params.id
+    const id = parseInt(route.params.id)
     if (!id) return
     
     loading.value = true
     try {
-        // 后期替换为真实API调用
-        // const response = await axios.get(`/api/articles/${id}`)
-        // article.value = response.data.article
+        // 使用mock接口获取文章详情
+        const response = await request({
+            url: `/mock/getarticle/${id}`,
+            method: 'get'
+        })
         
-        // 临时模拟，后期删除
-        article.value = {
-            id: id,
-            title: '示例文章标题',
-            content: '# 示例文章\n\n这是一篇示例文章，用于展示文章详情页面。\n\n## 第一部分\n\n### 1.1 小节标题\n这是第一部分的内容。\n\n## 第二部分\n\n### 2.1 小节标题\n这是第二部分的内容。',
-            author: '示例作者',
-            createTime: '2023-01-01',
-            commentCount: 0
+        if (response.data.code === 200) {
+            article.value = response.data.data
+        } else {
+            console.error('获取文章详情失败:', response.data.message)
         }
     } catch (error) {
         console.error('获取文章详情失败:', error)
