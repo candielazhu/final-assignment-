@@ -14,12 +14,34 @@ Mock.mock(/\/mock\/getarticle\/\d+/, 'get', (req) => {
     const articleDetail = article.find(item => item.id === id)
     
     if (articleDetail) {
-        return {
-            code: 200,
-            message: '获取成功',
-            data: {
-                ...articleDetail,
-                content: `# ${articleDetail.title}\n\n这是${articleDetail.title}的详细内容，支持 **Markdown** 格式。\n\n## 章节一\n\n这是章节一的内容，包含一些 **重要** 信息。\n\n## 章节二\n\n这是章节二的内容，包含更多细节。\n\n### 小节二.一\n\n这是小节二.一的内容，更加具体。\n\n### 小节二.二\n\n这是小节二.二的内容，提供额外信息。\n\n## 章节三\n\n这是章节三的内容，总结全文。`
+        try {
+            // 读取对应id的markdown文件
+            const fs = require('fs')
+            const path = require('path')
+            const mdFilePath = path.join(__dirname, '../services/articles', `${id}.md`)
+            let content = ''
+            
+            if (fs.existsSync(mdFilePath)) {
+                content = fs.readFileSync(mdFilePath, 'utf8')
+            } else {
+                // 如果文件不存在，使用默认内容
+                content = `# ${articleDetail.title}\n\n这是${articleDetail.title}的详细内容，支持 **Markdown** 格式。`
+            }
+            
+            return {
+                code: 200,
+                message: '获取成功',
+                data: {
+                    ...articleDetail,
+                    content: content
+                }
+            }
+        } catch (error) {
+            console.error('读取markdown文件失败:', error)
+            return {
+                code: 500,
+                message: '读取文章内容失败',
+                data: null
             }
         }
     } else {
