@@ -113,9 +113,16 @@ const fetchCategories = async () => {
 // 加载文章数据（用于编辑）
 const loadArticleData = async (id) => {
     try {
+        // 获取当前登录用户信息
+        const userInfoStr = localStorage.getItem('userInfo')
+        const userInfo = userInfoStr ? JSON.parse(userInfoStr) : {}
+        
         const response = await request({
             url: `/articles/${id}`,
-            method: 'get'
+            method: 'get',
+            params: {
+                user_id: userInfo.id || null
+            }
         })
         
         if (response.data.code === 200) {
