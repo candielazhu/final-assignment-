@@ -6,12 +6,12 @@
 ## 技术栈
 
 ### 前端
-- **前端框架**：Vue 3 (Composition API)
-- **构建工具**：Vite
+- **前端框架**：Vue 3.5.26 (Composition API)
+- **构建工具**：Vite 5.4.10
 - **路由管理**：Vue Router 4
-- **UI组件库**：Element Plus
-- **HTTP客户端**：Axios 1.2.1
-- **图标库**：@element-plus/icons-vue
+- **UI组件库**：Element Plus 2.13.0
+- **HTTP客户端**：Axios 1.13.2
+- **图标库**：@element-plus/icons-vue 2.3.2
 - **Markdown渲染**：marked ^17.0.1
 - **模拟数据**：Mock.js 1.1.0（开发环境）
 - **样式**：CSS3 + CSS变量
@@ -47,10 +47,15 @@
 
 ### 3. 评论系统
 - ✅ 独立的评论组件（Comment.vue）
-- ✅ 支持评论发布与回复
-- ✅ 评论删除功能（带Element Plus Popconfirm确认）
+- ✅ 支持评论发布与嵌套回复
+- ✅ 评论编辑功能（仅作者可用）
+- ✅ 评论删除功能（带Element Plus Popconfirm确认，仅作者可用）
 - ✅ 评论计数与实时更新
 - ✅ 登录状态控制
+- ✅ 评论分页功能
+- ✅ 评论内容字数限制（500字）
+- ✅ 加载状态与错误提示
+- ✅ 支持回复@用户名显示
 
 ### 4. 导航与路由
 - ✅ 侧边栏导航菜单
@@ -69,7 +74,7 @@
 
 ```bash
 # 前端依赖
-npm install vue@^3.5.24 vue-router@4 element-plus@2.2.19 axios@1.2.1 mockjs@1.1.0 @element-plus/icons-vue marked@^17.0.1 --save
+npm install vue@^3.5.26 vue-router@4 element-plus@^2.13.0 axios@^1.13.2 mockjs@1.1.0 @element-plus/icons-vue@^2.3.2 marked@^17.0.1 --save
 
 # 后端依赖
 npm install express mysql2 cors dotenv nodemon --save
@@ -123,9 +128,12 @@ npm run preview
 ├── server/                  # 后端服务目录
 │   ├── controllers/         # 控制器
 │   │   ├── articles.js      # 文章控制器（增删改查）
+│   │   ├── comments.js      # 评论控制器（增删改查）
+│   │   ├── categories.js    # 分类控制器
 │   │   └── users.js         # 用户控制器（登录注册）
 │   ├── routes/              # 路由
 │   │   ├── articles.js      # 文章路由（RESTful API）
+│   │   ├── comments.js      # 评论路由（RESTful API）
 │   │   ├── categories.js    # 分类路由
 │   │   └── users.js         # 用户路由
 │   ├── .env                 # 环境变量配置（已加入gitignore）
@@ -201,9 +209,10 @@ npm run preview
 - `GET /api/categories` - 获取分类列表
 
 #### 评论相关接口
-- `GET /api/articles/:id/comments` - 获取文章评论
-- `POST /api/articles/:id/comments` - 添加文章评论
-- `DELETE /api/comments/:id` - 删除评论（支持作者和管理员删除）
+- `GET /api/comments?article_id=:id` - 获取文章评论列表（支持分页）
+- `POST /api/comments` - 添加文章评论或回复
+- `PUT /api/comments/:id` - 编辑评论（仅作者可用）
+- `DELETE /api/comments/:id` - 删除评论（仅作者可用）
 
 #### 用户相关接口
 - `POST /api/users/register` - 用户注册
@@ -289,15 +298,18 @@ npm start
 7. **RESTful API设计**：规范的接口设计，便于后端对接
 8. **安全性考虑**：登录状态管理，权限控制，敏感信息保护
 9. **文章草稿功能**：支持保存为草稿和发布，草稿自动置顶显示
-10. **作者权限控制**：只有文章作者才能编辑和删除文章
+10. **作者权限控制**：只有文章作者才能编辑和删除文章/评论
 11. **优雅的确认机制**：使用Element Plus Popconfirm组件进行删除确认
 12. **锚点导航功能**：支持Markdown标题的自动锚点生成
 13. **文章内容左对齐**：优化阅读体验，符合用户阅读习惯
-14. **实时评论功能**：支持评论发布、回复和删除
-15. **数据库索引优化**：提高查询性能
-16. **环境变量管理**：敏感信息保护，支持不同环境配置
-17. **代码规范**：统一的代码风格，便于团队协作
-18. **完善的错误处理**：友好的错误提示，便于调试和维护
+14. **完整的评论系统**：支持评论发布、嵌套回复、编辑、删除、分页等功能
+15. **实时评论更新**：评论发布后自动刷新，无需手动刷新页面
+16. **评论@功能**：回复时自动显示@用户名，提升交互体验
+17. **评论字数限制**：合理的字数限制，保证评论质量
+18. **数据库索引优化**：提高查询性能
+19. **环境变量管理**：敏感信息保护，支持不同环境配置
+20. **代码规范**：统一的代码风格，便于团队协作
+21. **完善的错误处理**：友好的错误提示，便于调试和维护
 
 ## 版权说明
 本项目仅用于期末考核，请勿用于商业用途。
