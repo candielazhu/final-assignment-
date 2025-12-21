@@ -47,14 +47,14 @@
                     </div>
                     <div class="comment-actions" v-if="isLoggedIn">
                         <el-button 
-                            type="link" 
+                            link 
                             size="small" 
                             @click="replyComment(comment)"
                         >
                             回复
                         </el-button>
                         <el-button 
-                            type="link" 
+                            link 
                             size="small" 
                             @click="editComment(comment)"
                             v-if="comment.user_id === currentUserId"
@@ -68,13 +68,13 @@
                         >
                             <template #reference>
                                 <el-button 
-                                    type="link" 
-                                    size="small"
-                                    danger
-                                >
-                                    <el-icon><Delete /></el-icon>
-                                    删除
-                                </el-button>
+                                link 
+                                size="small"
+                                danger
+                            >
+                                <el-icon><Delete /></el-icon>
+                                删除
+                            </el-button>
                             </template>
                         </el-popconfirm>
                     </div>
@@ -140,14 +140,14 @@
                             </div>
                             <div class="comment-actions" v-if="isLoggedIn">
                                 <el-button 
-                                    type="link" 
+                                    link 
                                     size="small" 
                                     @click="replyComment(child)"
                                 >
                                     回复
                                 </el-button>
                                 <el-button 
-                                    type="link" 
+                                    link 
                                     size="small" 
                                     @click="editComment(child)"
                                     v-if="child.user_id === currentUserId"
@@ -161,7 +161,7 @@
                                 >
                                     <template #reference>
                                         <el-button 
-                                        type="link" 
+                                        link 
                                         size="small"
                                         danger
                                     >
