@@ -170,14 +170,6 @@ section {
   gap: 2px;
   flex-wrap: wrap;
   overflow: hidden;
-  /* Hide scrollbars */
-  scrollbar-width: none;
-  -ms-overflow-style: none;
-}
-
-/* Hide scrollbars for webkit browsers */
-section::-webkit-scrollbar {
-  display: none;
 }
 /* span格子后面的背景颜色 */
 section::before{
