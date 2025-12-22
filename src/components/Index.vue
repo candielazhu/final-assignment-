@@ -1,4 +1,5 @@
 <template>
+    <BG  style="z-index: -1;"/>
     <div class="index-container">
         <Header 
             :user-info="userInfo"
@@ -20,7 +21,7 @@ import { ref, provide, onMounted, reactive } from 'vue'
 import { useRouter } from 'vue-router'
 import Aside from './Aside.vue'
 import Header from './Header.vue'
-
+import BG from './bg/Background_animation.vue'
 const router = useRouter()
 
 // 全局状态

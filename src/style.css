@@ -23,9 +23,9 @@ html, body {
 /* 明亮主题变量 */
 :root[data-theme="light"] {
   /* 背景色 */
-  --bg-primary: #f0feff;
-  --bg-secondary: #e8f7fa;
-  --bg-tertiary: #f0f9fa;
+  --bg-primary: #fffbf060;
+  --bg-secondary: #fff2df;
+  --bg-tertiary: #f2ecde;
   
   /* 文本色 */
   --text-primary: #213547;
@@ -41,10 +41,10 @@ html, body {
   --primary-hover: #66b1ff;
   
   /* 组件色 */
-  --card-bg: #ffffff;
-  --input-bg: #ffffff;
-  --button-bg: #f9f9f9;
-  --button-hover: #f0f0f0;
+  --card-bg: #fff2df;
+  --input-bg: #fffbf0;
+  --button-bg: #eedeb0;
+  --button-hover: #d3b17d;
   
   /* 状态色 */
   --success-color: #67c23a;
@@ -55,7 +55,7 @@ html, body {
 /* 暗黑主题变量 */
 :root[data-theme="dark"] {
   /* 背景色 */
-  --bg-primary: #1a1a1a;
+  --bg-primary: #1a1a1a60;
   --bg-secondary: #242424;
   --bg-tertiary: #2c2c2c;
   
