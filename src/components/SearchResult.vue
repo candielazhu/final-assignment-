@@ -9,6 +9,7 @@
                         placeholder="输入标题关键词" 
                         clearable
                         style="width: 200px"
+                        @keyup.enter="handleSearch"
                     />
                 </el-form-item>
                 <el-form-item label="副标题">       
@@ -17,6 +18,7 @@
                         placeholder="输入副标题关键词" 
                         clearable
                         style="width: 200px"
+                        @keyup.enter="handleSearch"
                     />
                 </el-form-item>
                 <el-form-item label="用户">
@@ -25,10 +27,11 @@
                         placeholder="输入用户名或ID" 
                         clearable
                         style="width: 150px"
+                        @keyup.enter="handleSearch"
                     />
                 </el-form-item>
                 <el-form-item>
-                    <el-button type="primary" @click="handleSearch">搜索</el-button>
+                    <el-button type="primary" @click="handleSearch" :loading="isSearching">搜索</el-button>
                     <el-button @click="resetForm">重置</el-button>
                 </el-form-item>
             </el-form>
@@ -50,7 +53,7 @@
         </div>
 
         <!-- 搜索结果列表 -->
-        <div class="result-list" v-if="results.length > 0">
+        <div class="result-list" v-if="results.length > 0 && !isSearching">
             <div 
                 v-for="result in results" 
                 :key="result.id" 
@@ -66,16 +69,22 @@
                 <div class="result-meta">
                     <span class="author">{{ result.username }}</span>
                     <span class="time">{{ formatDate(result.createdAt) }}</span>
-                    <span class="views">{{ result.views }} 浏览</span>
+                    <span class="views">{{ result.views || 0 }} 浏览</span>
                 </div>
             </div>
         </div>
 
-        <!-- 无结果提示 -->
+        <!-- 搜索中状态 -->
         <div class="no-results" v-else-if="isSearching">
-            <el-empty description="正在搜索..." />
+            <el-empty description="正在搜索...">
+                <template #image>
+                    <el-icon class="is-loading"><Loading /></el-icon>
+                </template>
+            </el-empty>
         </div>
-        <div class="no-results" v-else-if="totalResults === 0">
+
+        <!-- 无结果提示 -->
+        <div class="no-results" v-else-if="totalResults === 0 && hasSearched">
             <el-empty>
                 <template #image>
                     <el-icon><Search /></el-icon>
@@ -90,7 +99,7 @@
                                 :key="suggestion" 
                                 type="info" 
                                 @click="handleSuggestionClick(suggestion)"
-                                style="margin: 2px"
+                                style="margin: 2px; cursor: pointer;"
                             >
                                 {{ suggestion }}
                             </el-tag>
@@ -101,7 +110,7 @@
         </div>
 
         <!-- 搜索历史 -->
-        <div class="search-history" v-if="showHistory && searchHistory.length > 0">
+        <div class="search-history" v-if="showHistory && searchHistory.length > 0 && !hasSearched">
             <div class="history-header">
                 <h4>搜索历史</h4>
                 <el-button link size="small" @click="clearHistory">清空</el-button>
@@ -113,6 +122,7 @@
                     @click="handleHistoryClick(item)"
                     closable
                     @close="removeHistoryItem(index)"
+                    style="cursor: pointer; margin: 4px;"
                 >
                     {{ item }}
                 </el-tag>
@@ -122,10 +132,11 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { Search } from '@element-plus/icons-vue'
-import axios from 'axios'
+import { ElMessage } from 'element-plus'
+import { Search, Loading } from '@element-plus/icons-vue'
+import request from '../axios/request'
 
 const router = useRouter()
 const route = useRoute()
@@ -139,6 +150,7 @@ const searchForm = ref({
 
 // 搜索状态
 const isSearching = ref(false)
+const hasSearched = ref(false)
 const results = ref([])
 const totalResults = ref(0)
 const sortBy = ref('relevance')
@@ -155,28 +167,53 @@ const suggestions = ref(['Vue 3', '前端开发', 'JavaScript', 'Element Plus', 
 
 // 高亮关键词
 const highlightKeywords = (text, keywords) => {
-    // 确保text是字符串
     const safeText = typeof text === 'string' ? text : ''
     if (!keywords) return safeText
-    const regex = new RegExp(`(${keywords})`, 'gi')
-    return safeText.replace(regex, '<span class="highlight">$1</span>')
+    try {
+        const regex = new RegExp(`(${keywords})`, 'gi')
+        return safeText.replace(regex, '<span class="highlight">$1</span>')
+    } catch (error) {
+        console.error('高亮关键词失败:', error)
+        return safeText
+    }
 }
 
 // 格式化日期
 const formatDate = (dateString) => {
-    // 确保dateString是有效的日期字符串
-    const date = new Date(dateString)
-    return isNaN(date.getTime()) ? '' : date.toLocaleString()
+    try {
+        const date = new Date(dateString)
+        return isNaN(date.getTime()) ? '' : date.toLocaleString()
+    } catch (error) {
+        console.error('格式化日期失败:', error)
+        return ''
+    }
 }
 
 // 跳转到文章详情
 const goToArticle = (articleId) => {
-    router.push(`/topic/${articleId}`)
+    try {
+        router.push(`/topic/${articleId}`)
+    } catch (error) {
+        console.error('跳转失败:', error)
+        ElMessage.error('跳转失败，请重试')
+    }
 }
 
 // 处理搜索
 const handleSearch = async () => {
+    console.log('====== 前端搜索开始 ======')
+    console.log('搜索表单:', searchForm.value)
+    
+    // 检查是否有搜索条件
+    const hasSearchTerm = searchForm.value.title || searchForm.value.subtitle || searchForm.value.username
+    if (!hasSearchTerm) {
+        ElMessage.warning('请输入至少一个搜索条件')
+        return
+    }
+    
     isSearching.value = true
+    hasSearched.value = true
+    showHistory.value = false
     
     // 构建搜索关键词
     const keywords = [
@@ -185,36 +222,78 @@ const handleSearch = async () => {
         searchForm.value.username
     ].filter(item => item).join(' ')
     
-    // 更新搜索关键词
     searchKeywords.value = keywords
+    console.log('搜索关键词:', keywords)
     
     // 保存搜索历史
     if (keywords) {
         addToSearchHistory(keywords)
     }
     
-    // 调用搜索API
     try {
-        const response = await axios.get('/api/articles/search', {
-            params: {
-                title: searchForm.value.title,
-                subtitle: searchForm.value.subtitle,
-                username: searchForm.value.username,
-                sortBy: sortBy.value
+        // 获取当前用户ID
+        let currentUserId = null
+        try {
+            const userInfo = localStorage.getItem('userInfo')
+            if (userInfo) {
+                const parsed = JSON.parse(userInfo)
+                currentUserId = parsed.id
             }
-        })
+        } catch (parseError) {
+            console.error('解析用户信息失败:', parseError)
+        }
+        
+        console.log('当前用户ID:', currentUserId)
+        
+        // 构建请求参数
+        const params = {
+            sortBy: sortBy.value
+        }
+        
+        if (searchForm.value.title) params.title = searchForm.value.title
+        if (searchForm.value.subtitle) params.subtitle = searchForm.value.subtitle
+        if (searchForm.value.username) params.username = searchForm.value.username
+        if (currentUserId) params.user_id = currentUserId
+        
+        console.log('请求参数:', params)
+        
+        // 调用搜索API
+        const response = await request.get('/articles/search', { params })
+        
+        console.log('搜索响应:', response.data)
         
         // 确保results始终是数组
-        results.value = Array.isArray(response.data.data) ? response.data.data : []
-        totalResults.value = typeof response.data.total === 'number' ? response.data.total : 0
+        if (response.data && response.data.code === 200) {
+            results.value = Array.isArray(response.data.data) ? response.data.data : []
+            totalResults.value = typeof response.data.total === 'number' ? response.data.total : 0
+            
+            console.log('搜索结果数量:', totalResults.value)
+            
+            if (totalResults.value === 0) {
+                ElMessage.info('未找到匹配的结果')
+            } else {
+                ElMessage.success(`找到 ${totalResults.value} 条结果`)
+            }
+        } else {
+            console.error('响应格式错误:', response.data)
+            results.value = []
+            totalResults.value = 0
+            ElMessage.error(response.data?.message || '搜索失败')
+        }
     } catch (error) {
-        console.error('搜索失败:', error)
-        // 发生错误时，确保results是数组
+        console.error('====== 搜索错误 ======')
+        console.error('错误类型:', error.name)
+        console.error('错误消息:', error.message)
+        console.error('错误详情:', error.response?.data)
+        console.error('错误堆栈:', error.stack)
+        console.error('====== 错误结束 ======')
+        
         results.value = []
         totalResults.value = 0
+        ElMessage.error(error.response?.data?.message || '搜索失败，请稍后重试')
     } finally {
         isSearching.value = false
-        showHistory.value = false
+        console.log('====== 前端搜索结束 ======\n')
     }
 }
 
@@ -227,12 +306,16 @@ const resetForm = () => {
     }
     results.value = []
     totalResults.value = 0
+    hasSearched.value = false
     showHistory.value = true
+    searchKeywords.value = ''
 }
 
 // 处理排序变化
 const handleSortChange = () => {
-    handleSearch()
+    if (hasSearched.value) {
+        handleSearch()
+    }
 }
 
 // 搜索历史相关方法
@@ -245,7 +328,7 @@ const getSearchHistory = () => {
         }
         return []
     } catch (error) {
-        console.error('解析搜索历史失败:', error)
+        console.error('获取搜索历史失败:', error)
         return []
     }
 }
@@ -259,30 +342,36 @@ const saveSearchHistory = (history) => {
 }
 
 const addToSearchHistory = (keyword) => {
-    let history = getSearchHistory()
-    // 去重
-    history = history.filter(item => item !== keyword)
-    // 添加到开头
-    history.unshift(keyword)
-    // 最多保存10条
-    if (history.length > 10) {
-        history = history.slice(0, 10)
+    try {
+        let history = getSearchHistory()
+        history = history.filter(item => item !== keyword)
+        history.unshift(keyword)
+        if (history.length > 10) {
+            history = history.slice(0, 10)
+        }
+        searchHistory.value = history
+        saveSearchHistory(history)
+    } catch (error) {
+        console.error('添加搜索历史失败:', error)
     }
-    searchHistory.value = history
-    saveSearchHistory(history)
 }
 
 const removeHistoryItem = (index) => {
-    let history = getSearchHistory()
-    history.splice(index, 1)
-    searchHistory.value = history
-    saveSearchHistory(history)
+    try {
+        let history = getSearchHistory()
+        history.splice(index, 1)
+        searchHistory.value = history
+        saveSearchHistory(history)
+    } catch (error) {
+        console.error('删除搜索历史失败:', error)
+    }
 }
 
 const clearHistory = () => {
-    searchHistory.value = []
     try {
+        searchHistory.value = []
         localStorage.removeItem('searchHistory')
+        ElMessage.success('搜索历史已清空')
     } catch (error) {
         console.error('清除搜索历史失败:', error)
     }
@@ -301,14 +390,17 @@ const handleSuggestionClick = (suggestion) => {
 
 // 初始化
 onMounted(() => {
-    // 获取搜索历史
-    searchHistory.value = getSearchHistory()
-    
-    // 从URL参数获取搜索关键词
-    const keyword = route.query.keyword
-    if (keyword) {
-        searchForm.value.title = keyword
-        handleSearch()
+    try {
+        searchHistory.value = getSearchHistory()
+        
+        // 从URL参数获取搜索关键词
+        const keyword = route.query.keyword
+        if (keyword) {
+            searchForm.value.title = keyword
+            handleSearch()
+        }
+    } catch (error) {
+        console.error('初始化失败:', error)
     }
 })
 </script>
@@ -349,6 +441,9 @@ onMounted(() => {
 .highlight {
     color: #409eff;
     font-weight: bold;
+    background-color: rgba(64, 158, 255, 0.1);
+    padding: 2px 4px;
+    border-radius: 2px;
 }
 
 .sort-options {
@@ -400,8 +495,15 @@ onMounted(() => {
     color: var(--text-secondary);
 }
 
+.no-results .el-icon {
+    font-size: 48px;
+}
+
 .search-history {
     margin-top: 30px;
+    background-color: var(--bg-secondary);
+    padding: 20px;
+    border-radius: 8px;
 }
 
 .history-header {
