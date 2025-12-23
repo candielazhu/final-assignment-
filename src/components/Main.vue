@@ -57,18 +57,19 @@ const formatDate = (dateString) => {
 }
 
 // 获取文章数据
-const getData = function() {
+const getData = async function() {
     // 获取当前登录用户信息
     const userInfoStr = localStorage.getItem('userInfo')
     const userInfo = userInfoStr ? JSON.parse(userInfoStr) : {}
     
-    request({
-        url: '/articles',
-        method: 'get',
-        params: {
-            user_id: userInfo.id || null
-        }
-    }).then(res => {
+    try {
+        const res = await request({
+            url: '/articles',
+            method: 'get',
+            params: {
+                user_id: userInfo.id || null
+            }
+        })
         let articleList = res.data.data
         console.log('获取到的文章数据:', articleList)
         
@@ -85,9 +86,9 @@ const getData = function() {
         })
         
         articles.value.list = articleList
-    }).catch(err => {
-        console.log(err)
-    })
+    } catch (err) {
+        console.error('获取文章列表失败:', err)
+    }
 }
 
 // 加载文章列表

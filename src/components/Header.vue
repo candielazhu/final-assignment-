@@ -4,12 +4,55 @@
             <el-switch v-model="value1" @change="handleThemeChange" />
         </div>
         <div>
-            <el-input v-model="input" style="width: 480px" placeholder="搜索" @keyup.enter="handleSearch" />
-            <el-button @click="handleSearch" style="margin-left: 10px;">
-                <el-icon>
-                    <Search />
-                </el-icon>
-            </el-button>
+            <el-autocomplete
+                v-model="input"
+                :fetch-suggestions="querySearch"
+                :trigger-on-focus="false"
+                :debounce="300"
+                placeholder="搜索"
+                @select="handleSearch"
+                @keyup.enter="handleSearch"
+                style="width: 480px"
+            >
+                <template #prefix>
+                    <el-icon class="el-input__icon"><Search /></el-icon>
+                </template>
+                <template #suffix>
+                    <el-button
+                        @click="handleSearch"
+                        type="primary"
+                        size="small"
+                    >
+                        搜索
+                    </el-button>
+                </template>
+                <template #default="{ item }">
+                    <div class="suggestion-item">
+                        <el-icon><Search /></el-icon>
+                        <span>{{ item.value }}</span>
+                    </div>
+                </template>
+                <template #footer>
+                    <div class="search-footer" v-if="searchHistory.length > 0">
+                        <div class="history-header">
+                            <span>搜索历史</span>
+                            <el-button link size="small" @click="clearHistory">清空</el-button>
+                        </div>
+                        <div class="history-tags">
+                            <el-tag
+                                v-for="(item, index) in searchHistory"
+                                :key="index"
+                                @click="handleHistoryClick(item)"
+                                closable
+                                @close="removeHistoryItem(index)"
+                                size="small"
+                            >
+                                {{ item }}
+                            </el-tag>
+                        </div>
+                    </div>
+                </template>
+            </el-autocomplete>
         </div>
         <div class="user">
             <el-popover placement="bottom" trigger="hover" width="120">
@@ -96,9 +139,88 @@ const handleThemeChange = () => {
     toggleTheme()
 }
 
+// 搜索历史记录
+const searchHistory = ref([])
+
+// 搜索建议列表
+const searchSuggestions = ref(['Vue 3', '前端开发', 'JavaScript', 'Element Plus', 'Vue Router', 'CSS', 'HTML', '响应式设计', '组件化开发', '状态管理'])
+
+// 初始化搜索历史
+const initSearchHistory = () => {
+    try {
+        const history = localStorage.getItem('searchHistory')
+        if (history) {
+            const parsedHistory = JSON.parse(history)
+            searchHistory.value = Array.isArray(parsedHistory) ? parsedHistory : []
+        }
+    } catch (error) {
+        console.error('解析搜索历史失败:', error)
+        searchHistory.value = []
+    }
+}
+
+// 保存搜索历史
+const saveSearchHistory = (history) => {
+    localStorage.setItem('searchHistory', JSON.stringify(history))
+}
+
+// 添加到搜索历史
+const addToSearchHistory = (keyword) => {
+    if (!keyword) return
+    
+    // 去重
+    let history = searchHistory.value.filter(item => item !== keyword)
+    // 添加到开头
+    history.unshift(keyword)
+    // 最多保存10条
+    if (history.length > 10) {
+        history = history.slice(0, 10)
+    }
+    
+    searchHistory.value = history
+    saveSearchHistory(history)
+}
+
+// 清除搜索历史
+const clearHistory = () => {
+    searchHistory.value = []
+    localStorage.removeItem('searchHistory')
+}
+
+// 移除单个搜索历史项
+const removeHistoryItem = (index) => {
+    let history = searchHistory.value
+    history.splice(index, 1)
+    searchHistory.value = history
+    saveSearchHistory(history)
+}
+
+// 点击搜索历史项
+const handleHistoryClick = (keyword) => {
+    input.value = keyword
+    handleSearch()
+}
+
+// 搜索建议查询函数
+const querySearch = (queryString, cb) => {
+    if (!queryString) {
+        cb([])
+        return
+    }
+    
+    // 过滤搜索建议
+    const suggestions = searchSuggestions.value
+        .filter(item => item.toLowerCase().includes(queryString.toLowerCase()))
+        .map(item => ({ value: item }))
+    
+    cb(suggestions)
+}
+
 // 搜索事件处理
 const handleSearch = () => {
     if (input.value.trim()) {
+        // 添加到搜索历史
+        addToSearchHistory(input.value.trim())
         // 发送搜索事件给父组件
         emit('search', input.value.trim())
     }
@@ -144,6 +266,9 @@ onMounted(() => {
 
     // 检查登录状态
     checkLoginStatus()
+    
+    // 初始化搜索历史
+    initSearchHistory()
 
     // 监听系统主题变化
     themeMediaQuery = window.matchMedia('(prefers-color-scheme: dark)')
@@ -202,5 +327,52 @@ watch(() => props.userInfo, (newInfo) => {
 
 .username:hover {
     color: var(--primary-color);
+}
+
+/* 搜索建议样式 */
+.suggestion-item {
+    display: flex;
+    align-items: center;
+    padding: 8px 12px;
+    gap: 8px;
+}
+
+.suggestion-item:hover {
+    background-color: var(--bg-hover);
+}
+
+/* 搜索历史样式 */
+.search-footer {
+    padding: 12px;
+    border-top: 1px solid var(--border-color);
+    background-color: var(--bg-secondary);
+}
+
+.history-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+    font-size: 14px;
+    color: var(--text-secondary);
+}
+
+.history-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+    .header {
+        flex-direction: column;
+        gap: 12px;
+        padding: 12px;
+    }
+    
+    .el-autocomplete {
+        width: 100% !important;
+    }
 }
 </style>

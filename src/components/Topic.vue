@@ -287,7 +287,7 @@ const fetchArticleDetail = async () => {
             console.error('获取文章详情失败:', response.data.message)
         }
     } catch (error) {
-        console.error('获取文章详情失败:', error)
+        console.error('获取文章详情失败:', error.name, error.message, error.stack)
     } finally {
         loading.value = false
     }
@@ -352,7 +352,7 @@ onUnmounted(() => {
     min-height: 80vh;
     width: 100%;
     text-align: left;
-    padding: 0;
+    padding: 20px 5px 0 20px;
     margin: 0;
 }
 

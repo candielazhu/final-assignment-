@@ -76,6 +76,8 @@
 - ✅ 组件样式隔离
 - ✅ 主题色与CSS变量
 - ✅ 修复了"待设置"子菜单宽度问题
+- ✅ 动态背景动画效果（渐变色彩流动）
+- ✅ 网格背景布局
 
 ## 主要依赖
 
@@ -153,6 +155,8 @@ npm run preview
 │   ├── axios/               # Axios配置
 │   │   └── request.js       # 请求拦截与配置
 │   ├── components/          # 组件
+│   │   ├── bg/              # 背景相关组件
+│   │   │   └── Background_animation.vue  # 背景动画组件
 │   │   ├── Aside.vue        # 侧边栏导航
 │   │   ├── Comment.vue      # 评论组件
 │   │   ├── footer.vue       # 页脚组件
@@ -161,6 +165,7 @@ npm run preview
 │   │   ├── Login.vue        # 登录组件
 │   │   ├── Main.vue         # 文章列表
 │   │   ├── Register.vue     # 注册组件
+│   │   ├── SearchResult.vue # 搜索结果组件
 │   │   ├── Topic.vue        # 文章详情
 │   │   └── Write.vue        # 文章编写
 │   ├── App.vue              # 根组件

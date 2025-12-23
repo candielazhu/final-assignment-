@@ -176,7 +176,7 @@ const handleRegister = async () => {
     justify-content: center;
     align-items: center;
     min-height: 100vh;
-    background: #f0feff;
+    background: #fff2df;
 }
 
 /* 大水珠的外形 */

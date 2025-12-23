@@ -32,6 +32,12 @@ const routes = [
         name: 'Write',
         component: () => import('./components/Write.vue'),
         meta: { requiresAuth: true } // 需要登录才能访问
+      },
+      {
+        path: 'search',
+        name: 'Search',
+        component: () => import('./components/SearchResult.vue'),
+        meta: { requiresAuth: false } // 允许未登录用户访问
       }
     ]
   },

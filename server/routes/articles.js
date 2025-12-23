@@ -5,6 +5,9 @@ const articleController = require('../controllers/articles');
 // 获取文章列表
 router.get('/articles', articleController.getArticles);
 
+// 搜索文章
+router.get('/articles/search', articleController.searchArticles);
+
 // 获取文章详情
 router.get('/articles/:id', articleController.getArticleById);
 
