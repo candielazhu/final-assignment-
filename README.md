@@ -206,10 +206,6 @@ npm run preview
 - **tags**：标签表
 - **article_tags**：文章标签关联表
 
-### 详细设计
-
-查看完整的数据库设计文档：[database-design.md](database-design.md)
-
 ## API接口设计
 
 ### 已实现的API接口
