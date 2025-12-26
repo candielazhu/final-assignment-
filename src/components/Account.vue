@@ -51,10 +51,60 @@
         <el-tab-pane label="我的文章" name="articles">
           <div class="articles-content">
             <div class="articles-actions">
-              <el-button type="primary" @click="navigateToWrite">写文章</el-button>
+              <el-button type="primary" @click="navigateToWrite" style="margin-bottom: var(--spacing-md);">写文章</el-button>
+              <div class="articles-filters" style="margin-left: auto; display: flex; gap: var(--spacing-sm);">
+                <el-select v-model="articleStatusFilter" placeholder="筛选状态" size="small" @change="handleFilterChange">
+                  <el-option label="全部" value="all" />
+                  <el-option label="已发布" value="published" />
+                  <el-option label="草稿" value="draft" />
+                </el-select>
+                <el-select v-model="articleSortBy" placeholder="排序字段" size="small" @change="handleSortChange">
+                  <el-option label="创建时间" value="created_at" />
+                  <el-option label="浏览量" value="reading" />
+                  <el-option label="评论数" value="comment_count" />
+                </el-select>
+                <el-select v-model="articleSortOrder" placeholder="排序方向" size="small" @change="handleSortChange">
+                  <el-option label="升序" value="asc" />
+                  <el-option label="降序" value="desc" />
+                </el-select>
+              </div>
             </div>
-            <el-table :data="userArticles" style="width: 100%" class="articles-table">
-              <el-table-column prop="title" label="标题" width="300" show-overflow-tooltip />
+            
+            <!-- 文章统计 -->
+            <div class="articles-stats" style="margin-bottom: var(--spacing-xl); display: flex; gap: var(--spacing-xl);">
+              <el-statistic 
+                title="已发布文章" 
+                :value="articleStats.published" 
+                :precision="0"
+              >
+                <template #suffix>
+                  <el-tag type="success" size="small">篇</el-tag>
+                </template>
+              </el-statistic>
+              <el-statistic 
+                title="草稿文章" 
+                :value="articleStats.draft" 
+                :precision="0"
+              >
+                <template #suffix>
+                  <el-tag type="info" size="small">篇</el-tag>
+                </template>
+              </el-statistic>
+            </div>
+            
+            <!-- 加载状态 -->
+            <el-skeleton :rows="5" animated v-if="isLoadingArticles" style="margin: var(--spacing-lg) 0;" />
+            
+            <!-- 文章列表 -->
+            <el-table 
+              v-else 
+              :data="userArticles" 
+              style="width: 100%" 
+              class="articles-table"
+              v-loading="isLoadingArticles"
+              empty-text="暂无文章"
+            >
+              <el-table-column prop="title" label="标题" width="200" show-overflow-tooltip />
               <el-table-column prop="summary" label="摘要" show-overflow-tooltip />
               <el-table-column prop="status" label="状态" width="100">
                 <template #default="{ row }">
@@ -63,14 +113,14 @@
                   </el-tag>
                 </template>
               </el-table-column>
-              <el-table-column prop="created_at" label="创建时间" width="180">
+              <el-table-column prop="created_at" label="创建时间" width="110">
                 <template #default="{ row }">
                   {{ formatDate(row.created_at) }}
                 </template>
               </el-table-column>
-              <el-table-column prop="reading" label="浏览" width="80" />
-              <el-table-column prop="comment_count" label="评论" width="80" />
-              <el-table-column label="操作" width="200">
+              <el-table-column prop="reading" label="浏览" width="60" />
+              <el-table-column prop="comment_count" label="评论" width="60" />
+              <el-table-column label="操作" width="300">
                 <template #default="{ row }">
                   <el-button size="small" @click="viewArticle(row.id)">查看</el-button>
                   <el-button size="small" type="primary" @click="editArticle(row.id)">编辑</el-button>
@@ -87,7 +137,9 @@
                 </template>
               </el-table-column>
             </el-table>
-            <div class="pagination-container" v-if="totalArticles > 0">
+            
+            <!-- 分页 -->
+            <div class="pagination-container" v-if="totalArticles > 0 && !isLoadingArticles">
               <el-pagination
                 v-model:current-page="currentPage"
                 v-model:page-size="pageSize"
@@ -97,6 +149,11 @@
                 @size-change="handleSizeChange"
                 @current-change="handleCurrentChange"
               />
+            </div>
+            
+            <!-- 空状态 -->
+            <div v-else-if="!isLoadingArticles && totalArticles === 0" class="empty-state">
+              <el-empty description="暂无文章" />
             </div>
           </div>
         </el-tab-pane>
@@ -170,6 +227,7 @@ const activeTab = ref('profile')
 
 // 用户信息
 const userInfo = reactive({
+  id: '',
   username: '',
   avatar: '',
   role: '',
@@ -178,6 +236,7 @@ const userInfo = reactive({
 
 // 个人信息表单
 const profileForm = reactive({
+  id: '',
   username: '',
   avatar: '',
   bio: ''
@@ -216,6 +275,14 @@ const userArticles = ref([])
 const totalArticles = ref(0)
 const currentPage = ref(1)
 const pageSize = ref(10)
+const articleStatusFilter = ref('all') // 筛选状态：all, published, draft
+const articleSortBy = ref('created_at') // 排序字段：created_at, reading, comment_count
+const articleSortOrder = ref('desc') // 排序方向：asc, desc
+const isLoadingArticles = ref(false) // 加载状态
+const articleStats = reactive({ // 文章统计
+  published: 0,
+  draft: 0
+})
 
 // 评论数据
 const userComments = ref([])
@@ -231,6 +298,7 @@ const fetchUserInfo = async () => {
       const parsedUserInfo = JSON.parse(userInfoStr)
       Object.assign(userInfo, parsedUserInfo)
       Object.assign(profileForm, {
+        id: parsedUserInfo.id,
         username: parsedUserInfo.username,
         avatar: parsedUserInfo.avatar,
         bio: parsedUserInfo.bio || ''
@@ -248,33 +316,59 @@ const fetchUserInfo = async () => {
 // 获取用户文章
 const fetchUserArticles = async () => {
   try {
+    isLoadingArticles.value = true
+    
+    // 使用现有的搜索API端点来获取用户文章
+    const params = {
+      user_id: userInfo.id,
+      page: currentPage.value,
+      pageSize: pageSize.value,
+      sort_by: articleSortBy.value,
+      sort_order: articleSortOrder.value
+    }
+    
+    // 添加状态筛选
+    if (articleStatusFilter.value !== 'all') {
+      params.status = articleStatusFilter.value
+    }
+    
     const response = await request({
-      url: '/articles/user',
+      url: '/articles',
       method: 'get',
-      params: {
-        user_id: userInfo.id,
-        page: currentPage.value,
-        pageSize: pageSize.value
-      }
+      params: params
     })
     
     if (response.data.code === 200) {
-      userArticles.value = response.data.data.list || []
-      totalArticles.value = response.data.data.total || 0
+      // API返回的数据结构是response.data.data和response.data.total
+      userArticles.value = response.data.data || []
+      totalArticles.value = response.data.total || 0
+      
+      // 前端计算统计信息
+      articleStats.published = userArticles.value.filter(article => article.status === 'published').length
+      articleStats.draft = userArticles.value.filter(article => article.status === 'draft').length
     } else {
       ElMessage.error('获取文章列表失败')
     }
   } catch (error) {
     console.error('获取文章列表失败:', error)
     ElMessage.error('获取文章列表失败')
+  } finally {
+    isLoadingArticles.value = false
   }
 }
 
 // 获取用户评论
 const fetchUserComments = async () => {
   try {
+    // 注意：当前API没有提供获取用户评论的端点，暂时返回空数组
+    // 后续可以根据实际API情况调整
+    userComments.value = []
+    totalComments.value = 0
+    
+    // 如果后续有了正确的API端点，可以使用以下代码
+    /*
     const response = await request({
-      url: '/comments/user',
+      url: '/正确的评论API端点',
       method: 'get',
       params: {
         user_id: userInfo.id,
@@ -289,9 +383,12 @@ const fetchUserComments = async () => {
     } else {
       ElMessage.error('获取评论列表失败')
     }
+    */
   } catch (error) {
     console.error('获取评论列表失败:', error)
-    ElMessage.error('获取评论列表失败')
+    // 静默处理，不影响主功能
+    userComments.value = []
+    totalComments.value = 0
   }
 }
 
@@ -409,7 +506,7 @@ const beforeAvatarUpload = (file) => {
 const formatDate = (dateString) => {
   if (!dateString) return ''
   const date = new Date(dateString)
-  return date.toLocaleDateString() + ' ' + date.toLocaleTimeString()
+  return date.toLocaleDateString()
 }
 
 // 跳转到写文章页面
@@ -457,6 +554,18 @@ const handleSizeChange = (val) => {
 // 处理文章当前页变化
 const handleCurrentChange = (val) => {
   currentPage.value = val
+  fetchUserArticles()
+}
+
+// 处理文章筛选变化
+const handleFilterChange = () => {
+  currentPage.value = 1 // 筛选变化时重置到第一页
+  fetchUserArticles()
+}
+
+// 处理文章排序变化
+const handleSortChange = () => {
+  currentPage.value = 1 // 排序变化时重置到第一页
   fetchUserArticles()
 }
 
@@ -639,6 +748,7 @@ onMounted(() => {
 
 .articles-table, .comments-table {
   margin-bottom: var(--spacing-xl);
+  height: 46vh;
 }
 
 .pagination-container {
