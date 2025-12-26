@@ -1,4 +1,5 @@
 :root {
+  /* 排版基础 */
   font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
   font-weight: 400;
@@ -6,6 +7,27 @@
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  
+  /* 布局基础 */
+  --content-max-width: 1200px;
+  --sidebar-width: 240px;
+  
+  /* 间距系统 */
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 12px;
+  --spacing-lg: 16px;
+  --spacing-xl: 24px;
+  
+  /* 圆角 */
+  --border-radius-sm: 4px;
+  --border-radius-md: 8px;
+  --border-radius-lg: 12px;
+  
+  /* 过渡 */
+  --transition-fast: 0.15s;
+  --transition-normal: 0.25s;
+  --transition-slow: 0.3s;
 }
 
 * {
@@ -26,6 +48,7 @@ html, body {
   --bg-primary: #fffbf060;
   --bg-secondary: #fff2df;
   --bg-tertiary: #f2ecde;
+  --bg-hover: #e8e0cd;
   --bg-login: #fffbf060;
   
   /* 文本色 */
@@ -59,6 +82,7 @@ html, body {
   --bg-primary: #1a1a1a60;
   --bg-secondary: #242424;
   --bg-tertiary: #2c2c2c;
+  --bg-hover: #333333;
   --bg-login: #c2ccd0;
   
   /* 文本色 */

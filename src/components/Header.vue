@@ -312,9 +312,10 @@ watch(() => props.userInfo, (newInfo) => {
     flex-direction: row;
     justify-content: space-around;
     align-items: center;
-    padding: 10px;
+    padding: var(--spacing-md);
     background-color: var(--bg-secondary);
     border-bottom: 1px solid var(--border-color);
+    transition: all var(--transition-normal);
 }
 
 .user-info {
@@ -327,8 +328,8 @@ watch(() => props.userInfo, (newInfo) => {
     color: var(--text-primary);
     font-size: 14px;
     font-weight: 500;
-    margin-right: 5px;
-    transition: all 0.3s ease;
+    margin-right: var(--spacing-xs);
+    transition: all var(--transition-normal) ease;
 }
 
 .username:hover {
@@ -339,17 +340,18 @@ watch(() => props.userInfo, (newInfo) => {
 .suggestion-item {
     display: flex;
     align-items: center;
-    padding: 8px 12px;
-    gap: 8px;
+    padding: var(--spacing-sm) var(--spacing-md);
+    gap: var(--spacing-sm);
+    transition: all var(--transition-normal);
 }
 
 .suggestion-item:hover {
-    background-color: var(--bg-hover);
+    background-color: var(--bg-tertiary);
 }
 
 /* 搜索历史样式 */
 .search-footer {
-    padding: 12px;
+    padding: var(--spacing-md);
     border-top: 1px solid var(--border-color);
     background-color: var(--bg-secondary);
 }
@@ -358,7 +360,7 @@ watch(() => props.userInfo, (newInfo) => {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 8px;
+    margin-bottom: var(--spacing-sm);
     font-size: 14px;
     color: var(--text-secondary);
 }
@@ -366,15 +368,15 @@ watch(() => props.userInfo, (newInfo) => {
 .history-tags {
     display: flex;
     flex-wrap: wrap;
-    gap: 8px;
+    gap: var(--spacing-sm);
 }
 
 /* 响应式设计 */
 @media (max-width: 768px) {
     .header {
         flex-direction: column;
-        gap: 12px;
-        padding: 12px;
+        gap: var(--spacing-md);
+        padding: var(--spacing-md);
     }
     
     .el-autocomplete {
