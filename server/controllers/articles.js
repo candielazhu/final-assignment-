@@ -11,11 +11,46 @@ async function getArticles(req, res) {
     console.log('req.body:', req.body);
 
     // 获取当前用户ID（从前端传递或使用默认值）
-    const currentUserId = (req.query && req.query.user_id) || (req.body && req.body.user_id) || null;
+    const currentUserId = parseInt((req.query && req.query.user_id) || (req.body && req.body.user_id) || 0);
+    
+    // 获取分页参数
+    const page = parseInt(req.query.page) || 1;
+    const pageSize = parseInt(req.query.pageSize) || 10;
+    const offset = (page - 1) * pageSize;
+    
+    // 获取排序参数
+    const sortBy = req.query.sort_by || 'created_at';
+    const sortOrder = req.query.sort_order || 'desc';
+    
+    // 获取筛选参数
+    const statusFilter = req.query.status;
 
-    // 从数据库获取文章列表，过滤条件：
-    // 1. 已发布的文章对所有用户可见
-    // 2. 草稿文章仅对作者可见
+    // 构建基础WHERE条件
+    let whereConditions = [];
+    whereConditions.push(`(a.status = 'published' OR (a.status = 'draft' AND a.user_id = ${currentUserId}))`);
+    
+    // 添加状态筛选
+    if (statusFilter && statusFilter !== 'all') {
+      whereConditions.push(`a.status = '${statusFilter}'`);
+    }
+    
+    // 构建完整的WHERE子句
+    const whereClause = whereConditions.length > 0 ? `WHERE ${whereConditions.join(' AND ')}` : '';
+    
+    // 获取总记录数
+    const countSql = `
+      SELECT COUNT(*) as total
+      FROM articles a
+      ${whereClause}
+    `;
+    
+    // 调试日志：查看完整的countSql
+    console.log('完整的countSql:', countSql);
+    
+    const countResult = await executeQuery(countSql);
+    const total = countResult[0].total;
+    
+    // 获取文章数据
     const sql = `
       SELECT 
         a.id, a.title, a.summary, a.category_id, a.user_id as author_id, 
@@ -25,17 +60,21 @@ async function getArticles(req, res) {
       FROM articles a
       LEFT JOIN categories c ON a.category_id = c.id
       LEFT JOIN users u ON a.user_id = u.id
-      WHERE a.status = 'published' OR (a.status = 'draft' AND a.user_id = ?)
-      ORDER BY a.created_at DESC
+      ${whereClause}
+      ORDER BY a.${sortBy} ${sortOrder}
+      LIMIT ${pageSize} OFFSET ${offset}
     `;
-
-    const articles = await executeQuery(sql, [currentUserId || 0]);
+    
+    // 调试日志：查看完整的sql
+    console.log('完整的sql:', sql);
+    
+    const articles = await executeQuery(sql);
 
     res.json({
       code: 200,
       message: '获取成功',
       data: articles,
-      total: articles.length
+      total: total
     });
   } catch (error) {
     console.error('获取文章列表失败:', error);
