@@ -19,37 +19,39 @@ const routes = [
         path: '', // 默认子路由
         name: 'Main',
         component: () => import('./components/Main.vue'),
-        meta: { requiresAuth: false } // 允许未登录用户访问
+        meta: { requiresAuth: false, title: '首页' } // 允许未登录用户访问
       },
       {
         path: 'topic/:id',
         name: 'Topic',
         component: () => import('./components/Topic.vue'),
-        meta: { requiresAuth: false } // 允许未登录用户访问
+        meta: { requiresAuth: false, title: '文章详情' } // 允许未登录用户访问
       },
       {
         path: 'write',
         name: 'Write',
         component: () => import('./components/Write.vue'),
-        meta: { requiresAuth: true } // 需要登录才能访问
+        meta: { requiresAuth: true, title: '写文章' } // 需要登录才能访问
       },
       {
         path: 'search',
         name: 'Search',
         component: () => import('./components/SearchResult.vue'),
-        meta: { requiresAuth: false } // 允许未登录用户访问
+        meta: { requiresAuth: false, title: '搜索结果' } // 允许未登录用户访问
       }
     ]
   },
   {
     path: '/login',
     name: 'Login',
-    component: () => import('./components/Login.vue')
+    component: () => import('./components/Login.vue'),
+    meta: { title: '登录' }
   },
   {
     path: '/register',
     name: 'Register',
-    component: () => import('./components/Register.vue')
+    component: () => import('./components/Register.vue'),
+    meta: { title: '注册' }
   },
   // 404页面路由
   {
@@ -64,9 +66,11 @@ const router = createRouter({
   routes
 })
 
-// 路由守卫，检查登录状态
+// 路由守卫，检查登录状态并设置页面标题
 router.beforeEach((to, from, next) => {
-  // 检查是否是初始访问（from.name为空表示从外部进入）
+  // 设置页面标题
+  const title = to.meta.title || 'CanDie'
+  document.title = `${title}`
 
   // 检查路由是否需要认证
   if (to.matched.some(record => record.meta.requiresAuth)) {
