@@ -68,7 +68,7 @@
                             <el-menu-item index="1" @click="handleAuthButtonClick">
                                 {{ isLoggedIn ? '退出登录' : '登录' }}
                             </el-menu-item>
-                            <el-menu-item index="2" v-if="isLoggedIn">
+                            <el-menu-item index="2" v-if="isLoggedIn" @click="handleAccountClick">
                                 个人中心
                             </el-menu-item>
                         </el-menu-item-group>
@@ -235,6 +235,12 @@ const handleAuthButtonClick = () => {
         // 跳转到登录页面
         router.push('/login')
     }
+}
+
+// 个人中心点击事件
+const handleAccountClick = () => {
+    // 跳转到个人中心页面
+    router.push('/account')
 }
 
 const logout = () => {

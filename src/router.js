@@ -38,7 +38,13 @@ const routes = [
         name: 'Search',
         component: () => import('./components/SearchResult.vue'),
         meta: { requiresAuth: false, title: '搜索结果' } // 允许未登录用户访问
-      }
+      },
+      {
+        path: 'account',
+        name: 'Account',
+        component: () => import('./components/Account.vue'),
+        meta: { requiresAuth: true, title: '用户中心' } // 需要登录才能访问
+      },
     ]
   },
   {
