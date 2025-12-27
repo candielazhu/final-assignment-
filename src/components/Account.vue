@@ -95,66 +95,55 @@
             <!-- 加载状态 -->
             <el-skeleton :rows="5" animated v-if="isLoadingArticles" style="margin: var(--spacing-lg) 0;" />
             
-            <!-- 文章列表 -->
-            <el-table 
-              v-else 
-              :data="userArticles" 
-              style="width: 100%" 
-              class="articles-table"
-              v-loading="isLoadingArticles"
-              empty-text="暂无文章"
-            >
-              <el-table-column prop="title" label="标题" width="200" show-overflow-tooltip />
-              <el-table-column prop="summary" label="摘要" show-overflow-tooltip />
-              <el-table-column prop="status" label="状态" width="100">
-                <template #default="{ row }">
-                  <el-tag :type="row.status === 'published' ? 'success' : 'info'">
-                    {{ row.status === 'published' ? '已发布' : '草稿' }}
-                  </el-tag>
-                </template>
-              </el-table-column>
-              <el-table-column prop="created_at" label="创建时间" width="110">
-                <template #default="{ row }">
-                  {{ formatDate(row.created_at) }}
-                </template>
-              </el-table-column>
-              <el-table-column prop="reading" label="浏览" width="60" />
-              <el-table-column prop="comment_count" label="评论" width="60" />
-              <el-table-column label="操作" width="300">
-                <template #default="{ row }">
-                  <el-button size="small" @click="viewArticle(row.id)">查看</el-button>
-                  <el-button size="small" type="primary" @click="editArticle(row.id)">编辑</el-button>
-                  <el-popconfirm
-                    title="确定要删除这篇文章吗？"
-                    confirm-button-text="确定"
-                    cancel-button-text="取消"
-                    @confirm="deleteArticle(row.id)"
-                  >
-                    <template #reference>
-                      <el-button size="small" type="danger">删除</el-button>
-                    </template>
-                  </el-popconfirm>
-                </template>
-              </el-table-column>
-            </el-table>
-            
-            <!-- 分页 -->
-            <div class="pagination-container" v-if="totalArticles > 0 && !isLoadingArticles">
-              <el-pagination
-                v-model:current-page="currentPage"
-                v-model:page-size="pageSize"
-                :page-sizes="[5, 10, 20, 50]"
-                layout="total, sizes, prev, pager, next, jumper"
-                :total="totalArticles"
-                @size-change="handleSizeChange"
-                @current-change="handleCurrentChange"
-              />
-            </div>
-            
-            <!-- 空状态 -->
-            <div v-else-if="!isLoadingArticles && totalArticles === 0" class="empty-state">
-              <el-empty description="暂无文章" />
-            </div>
+            <!-- 非加载状态 -->
+            <template v-else>
+              <!-- 文章列表 -->
+              <el-table 
+                v-if="totalArticles > 0" 
+                :data="userArticles" 
+                style="width: 100%" 
+                class="articles-table"
+                v-loading="isLoadingArticles"
+              >
+                <el-table-column prop="title" label="标题" width="200" show-overflow-tooltip />
+                <el-table-column prop="summary" label="摘要" show-overflow-tooltip />
+                <el-table-column prop="status" label="状态" width="100">
+                  <template #default="{ row }">
+                    <el-tag :type="row.status === 'published' ? 'success' : 'info'">
+                      {{ row.status === 'published' ? '已发布' : '草稿' }}
+                    </el-tag>
+                  </template>
+                </el-table-column>
+                <el-table-column prop="created_at" label="创建时间" width="110">
+                  <template #default="{ row }">
+                    {{ formatDate(row.created_at) }}
+                  </template>
+                </el-table-column>
+                <el-table-column prop="reading" label="浏览" width="60" />
+                <el-table-column prop="comment_count" label="评论" width="60" />
+                <el-table-column label="操作" width="300">
+                  <template #default="{ row }">
+                    <el-button size="small" @click="viewArticle(row.id)">查看</el-button>
+                    <el-button size="small" type="primary" @click="editArticle(row.id)">编辑</el-button>
+                    <el-popconfirm
+                      title="确定要删除这篇文章吗？"
+                      confirm-button-text="确定"
+                      cancel-button-text="取消"
+                      @confirm="deleteArticle(row.id)"
+                    >
+                      <template #reference>
+                        <el-button size="small" type="danger">删除</el-button>
+                      </template>
+                    </el-popconfirm>
+                  </template>
+                </el-table-column>
+              </el-table>
+              
+              <!-- 空状态 -->
+              <div v-else class="empty-state">
+                 <el-empty description="暂无文章" />
+               </div>
+            </template>
           </div>
         </el-tab-pane>
 
@@ -273,8 +262,6 @@ const settingsFormRef = ref(null)
 // 文章数据
 const userArticles = ref([])
 const totalArticles = ref(0)
-const currentPage = ref(1)
-const pageSize = ref(10)
 const articleStatusFilter = ref('all') // 筛选状态：all, published, draft
 const articleSortBy = ref('created_at') // 排序字段：created_at, reading, comment_count
 const articleSortOrder = ref('desc') // 排序方向：asc, desc
@@ -321,8 +308,7 @@ const fetchUserArticles = async () => {
     // 使用现有的搜索API端点来获取用户文章
     const params = {
       user_id: userInfo.id,
-      page: currentPage.value,
-      pageSize: pageSize.value,
+      only_current_user: true,
       sort_by: articleSortBy.value,
       sort_order: articleSortOrder.value
     }
@@ -544,28 +530,13 @@ const deleteArticle = async (id) => {
   }
 }
 
-// 处理文章分页大小变化
-const handleSizeChange = (val) => {
-  pageSize.value = val
-  currentPage.value = 1
-  fetchUserArticles()
-}
-
-// 处理文章当前页变化
-const handleCurrentChange = (val) => {
-  currentPage.value = val
-  fetchUserArticles()
-}
-
 // 处理文章筛选变化
 const handleFilterChange = () => {
-  currentPage.value = 1 // 筛选变化时重置到第一页
   fetchUserArticles()
 }
 
 // 处理文章排序变化
 const handleSortChange = () => {
-  currentPage.value = 1 // 排序变化时重置到第一页
   fetchUserArticles()
 }
 

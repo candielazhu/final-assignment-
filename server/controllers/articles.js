@@ -13,7 +13,8 @@ async function getArticles(req, res) {
     // 获取当前用户ID（从前端传递或使用默认值）
     const currentUserId = parseInt((req.query && req.query.user_id) || (req.body && req.body.user_id) || 0);
     
-    // 获取分页参数
+    // 获取分页参数（如果没有提供则返回所有数据）
+    const hasPagination = req.query.page && req.query.pageSize;
     const page = parseInt(req.query.page) || 1;
     const pageSize = parseInt(req.query.pageSize) || 10;
     const offset = (page - 1) * pageSize;
@@ -25,12 +26,22 @@ async function getArticles(req, res) {
     // 获取筛选参数
     const statusFilter = req.query.status;
 
+    // 获取是否仅返回当前用户文章的参数（用于Account.vue页面）
+    const onlyCurrentUser = req.query.only_current_user === 'true';
+    
     // 构建基础WHERE条件
     let whereConditions = [];
-    whereConditions.push(`(a.status = 'published' OR (a.status = 'draft' AND a.user_id = ${currentUserId}))`);
     
-    // 添加状态筛选
-    if (statusFilter && statusFilter !== 'all') {
+    if (onlyCurrentUser) {
+      // Account.vue页面：只返回当前用户的文章
+      whereConditions.push(`a.user_id = ${currentUserId}`);
+    } else {
+      // Main.vue页面：只返回已发布的文章
+      whereConditions.push(`a.status = 'published'`);
+    }
+    
+    // 添加状态筛选（仅对Account.vue页面有效，Main.vue页面始终只显示已发布文章）
+    if (onlyCurrentUser && statusFilter && statusFilter !== 'all') {
       whereConditions.push(`a.status = '${statusFilter}'`);
     }
     
@@ -50,8 +61,8 @@ async function getArticles(req, res) {
     const countResult = await executeQuery(countSql);
     const total = countResult[0].total;
     
-    // 获取文章数据
-    const sql = `
+    // 构建SQL查询，根据是否有分页参数决定是否添加LIMIT和OFFSET
+    let sql = `
       SELECT 
         a.id, a.title, a.summary, a.category_id, a.user_id as author_id, 
         a.view_count as reading, a.comment_count, a.created_at, a.updated_at, a.status,
@@ -62,8 +73,14 @@ async function getArticles(req, res) {
       LEFT JOIN users u ON a.user_id = u.id
       ${whereClause}
       ORDER BY a.${sortBy} ${sortOrder}
-      LIMIT ${pageSize} OFFSET ${offset}
     `;
+    
+    // 如果有分页参数，添加LIMIT和OFFSET
+    if (hasPagination) {
+      sql += `
+      LIMIT ${pageSize} OFFSET ${offset}
+      `;
+    }
     
     // 调试日志：查看完整的sql
     console.log('完整的sql:', sql);
