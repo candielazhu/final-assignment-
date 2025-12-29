@@ -125,7 +125,7 @@ async function getUserInfo(req, res) {
   try {
     const { id } = req.params;
     
-    const sql = 'SELECT id, username, email, avatar, role, created_at FROM users WHERE id = ?';
+    const sql = 'SELECT id, username, email, phone, avatar, bio, role, created_at FROM users WHERE id = ?';
     const users = await executeQuery(sql, [id]);
     
     if (users.length === 0) {
@@ -150,8 +150,70 @@ async function getUserInfo(req, res) {
   }
 }
 
+// 更新用户信息
+async function updateUser(req, res) {
+  try {
+    const { id } = req.params;
+    const { username, email, phone, avatar, bio } = req.body;
+    
+    // 验证输入
+    if (!username) {
+      return res.status(400).json({
+        code: 400,
+        message: '用户名不能为空'
+      });
+    }
+    
+    // 检查用户名是否已被其他用户使用
+    const checkUsernameSql = 'SELECT id FROM users WHERE username = ? AND id != ?';
+    const usernameResult = await executeQuery(checkUsernameSql, [username, id]);
+    
+    if (usernameResult.length > 0) {
+      return res.status(400).json({
+        code: 400,
+        message: '用户名已被使用'
+      });
+    }
+    
+    // 检查邮箱是否已被其他用户使用
+    if (email) {
+      const checkEmailSql = 'SELECT id FROM users WHERE email = ? AND id != ?';
+      const emailResult = await executeQuery(checkEmailSql, [email, id]);
+      
+      if (emailResult.length > 0) {
+        return res.status(400).json({
+          code: 400,
+          message: '邮箱已被使用'
+        });
+      }
+    }
+    
+    // 更新用户信息
+    const updateSql = `
+      UPDATE users 
+      SET username = ?, email = ?, phone = ?, avatar = ?, bio = ? 
+      WHERE id = ?
+    `;
+    
+    await executeQuery(updateSql, [username, email, phone, avatar, bio, id]);
+    
+    res.json({
+      code: 200,
+      message: '更新成功'
+    });
+  } catch (error) {
+    console.error('更新用户信息失败:', error);
+    res.status(500).json({
+      code: 500,
+      message: '更新用户信息失败，请稍后重试',
+      error: error.message
+    });
+  }
+}
+
 module.exports = {
   registerUser,
   loginUser,
-  getUserInfo
+  getUserInfo,
+  updateUser
 };

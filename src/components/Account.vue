@@ -19,12 +19,19 @@
               <el-form-item label="用户名" prop="username">
                 <el-input v-model="profileForm.username" placeholder="请输入用户名" />
               </el-form-item>
+              <el-form-item label="邮箱" prop="email">
+                <el-input v-model="profileForm.email" placeholder="请输入邮箱" />
+              </el-form-item>
+              <el-form-item label="手机号" prop="phone">
+                <el-input v-model="profileForm.phone" placeholder="请输入手机号" />
+              </el-form-item>
               <el-form-item label="头像">
                 <el-upload
                   class="avatar-uploader"
-                  action="/api/upload"
+                  :action="''"
                   :show-file-list="false"
-                  :on-success="handleAvatarSuccess"
+                  :auto-upload="false"
+                  :on-change="handleAvatarChange"
                   :before-upload="beforeAvatarUpload"
                 >
                   <img v-if="profileForm.avatar" :src="profileForm.avatar" class="avatar" />
@@ -115,7 +122,9 @@ const userInfo = reactive({
   username: '',
   avatar: '',
   role: '',
-  createTime: ''
+  createTime: '',
+  email: '',
+  phone: ''
 })
 
 // 个人信息表单
@@ -123,7 +132,9 @@ const profileForm = reactive({
   id: '',
   username: '',
   avatar: '',
-  bio: ''
+  bio: '',
+  email: '',
+  phone: ''
 })
 
 // 个人信息验证规则
@@ -131,6 +142,14 @@ const profileRules = {
   username: [
     { required: true, message: '请输入用户名', trigger: 'blur' },
     { min: 2, max: 20, message: '用户名长度在 2 到 20 个字符', trigger: 'blur' }
+  ],
+  email: [
+    { required: false, message: '请输入邮箱', trigger: 'blur' },
+    { type: 'email', message: '请输入正确的邮箱格式', trigger: 'blur' }
+  ],
+  phone: [
+    { required: false, message: '请输入手机号', trigger: 'blur' },
+    { pattern: /^1[3-9]\d{9}$/, message: '请输入正确的手机号格式', trigger: 'blur' }
   ]
 }
 
@@ -171,7 +190,9 @@ const fetchUserInfo = async () => {
         id: parsedUserInfo.id,
         username: parsedUserInfo.username,
         avatar: parsedUserInfo.avatar,
-        bio: parsedUserInfo.bio || ''
+        bio: parsedUserInfo.bio || '',
+        email: parsedUserInfo.email || '',
+        phone: parsedUserInfo.phone || ''
       })
     } else {
       ElMessage.error('未找到用户信息')
@@ -227,7 +248,9 @@ const updateProfile = async () => {
       data: {
         username: profileForm.username,
         avatar: profileForm.avatar,
-        bio: profileForm.bio
+        bio: profileForm.bio,
+        email: profileForm.email,
+        phone: profileForm.phone
       }
     })
     
@@ -239,7 +262,9 @@ const updateProfile = async () => {
         ...userInfo,
         username: profileForm.username,
         avatar: profileForm.avatar,
-        bio: profileForm.bio
+        bio: profileForm.bio,
+        email: profileForm.email,
+        phone: profileForm.phone
       }
       localStorage.setItem('userInfo', JSON.stringify(updatedUserInfo))
       
@@ -305,9 +330,16 @@ function validateConfirmPassword(rule, value, callback) {
   }
 }
 
-// 头像上传成功
-const handleAvatarSuccess = (response, file, fileList) => {
-  profileForm.avatar = URL.createObjectURL(file.raw)
+// 头像选择变化处理
+const handleAvatarChange = (file, fileList) => {
+  try {
+    // 直接使用本地文件的 URL，不需要发送请求到后端
+    profileForm.avatar = URL.createObjectURL(file.raw)
+    ElMessage.success('头像设置成功')
+  } catch (error) {
+    console.error('处理头像失败:', error)
+    ElMessage.error('头像设置失败，请稍后重试')
+  }
 }
 
 // 上传头像前验证

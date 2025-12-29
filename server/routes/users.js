@@ -11,4 +11,7 @@ router.post('/login', userController.loginUser);
 // 获取用户信息
 router.get('/:id', userController.getUserInfo);
 
+// 更新用户信息
+router.put('/:id', userController.updateUser);
+
 module.exports = router;

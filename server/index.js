@@ -26,6 +26,19 @@ app.get('/', (req, res) => {
   res.send('后端服务器运行正常');
 });
 
+// 上传文件
+app.post('/api/upload', (req, res) => {
+  // 模拟上传功能，直接返回一个随机的图片URL
+  const mockAvatarUrl = `https://picsum.photos/200/200?random=${Math.floor(Math.random() * 1000)}`;
+  res.json({
+    code: 200,
+    data: {
+      url: mockAvatarUrl
+    },
+    message: '上传成功'
+  });
+});
+
 // 测试数据库连接
 async function startServer() {
   await testConnection();
