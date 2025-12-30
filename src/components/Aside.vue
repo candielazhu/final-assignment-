@@ -31,12 +31,14 @@
                             <span>工具</span>
                         </template>
                         <el-menu-item-group title="Group One">
-                            <el-menu-item index="1-1">item one</el-menu-item>
-                            <el-menu-item index="1-2">item two</el-menu-item>
+                            <el-menu-item index="1-1" @click="navigateTo('Calendar')">日历</el-menu-item>
+                            <el-menu-item index="1-2" @click="navigateTo('Admin')">用户管理</el-menu-item>
                         </el-menu-item-group>
+
                         <el-menu-item-group title="Group Two">
                             <el-menu-item index="1-3">item three</el-menu-item>
                         </el-menu-item-group>
+
                         <el-sub-menu index="1-4">
                             <template #title>item four</template>
                             <el-menu-item index="1-4-1">item one</el-menu-item>

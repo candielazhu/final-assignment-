@@ -45,6 +45,18 @@ const routes = [
         component: () => import('./components/Account.vue'),
         meta: { requiresAuth: true, title: '用户中心' } // 需要登录才能访问
       },
+      {
+        path: 'admin',
+        name: 'Admin',
+        component: () => import('./components/Admin.vue'),
+        meta: { requiresAuth: true, title: '管理员中心' } // 需要登录才能访问
+      },
+      {
+        path: 'calendar',
+        name: 'Calendar',
+        component: () => import('./components/Calendar.vue'),
+        meta: { requiresAuth: true, title: '日历' } // 需要登录才能访问
+      },
     ]
   },
   {
