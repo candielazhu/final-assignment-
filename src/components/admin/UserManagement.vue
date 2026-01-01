@@ -23,7 +23,7 @@
             <el-table :data="users" style="width: 100%" :default-sort="{ prop: 'created_at', order: 'descending' }"
                 class="user-table">
                 <el-table-column prop="id" label="ID" width="80" sortable />
-                <el-table-column prop="username" label="用户名" width="150" sortable />
+                <el-table-column prop="username" label="用户名" width="100" sortable />
                 <el-table-column prop="email" label="邮箱" width="200" sortable />
                 <el-table-column prop="phone" label="手机号" width="150" sortable />
                 <el-table-column prop="role" label="角色" width="100" sortable>
@@ -33,7 +33,7 @@
                         </el-tag>
                     </template>
                 </el-table-column>
-                <el-table-column prop="created_at" label="注册时间" width="180" sortable>
+                <el-table-column prop="created_at" label="注册时间" width="110" sortable>
                     <template #default="scope">
                         {{ formatDate(scope.row.created_at) }}
                     </template>
@@ -152,10 +152,7 @@ const formatDate = (dateString) => {
   return date.toLocaleString('zh-CN', {
     year: 'numeric',
     month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit'
+    day: '2-digit'
   })
 }
 
@@ -322,6 +319,7 @@ onMounted(() => {
 .user-table {
     margin-bottom: var(--spacing-xl);
 }
+
 
 :deep(.el-table) {
     background-color: var(--bg-secondary);
