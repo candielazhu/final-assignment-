@@ -27,18 +27,44 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
+import { ElMessage } from 'element-plus'
 import UserManagement from './admin/UserManagement.vue'
 import ArticleManagement from './admin/ArticleManagement.vue'
 import CommentManagement from './admin/CommentManagement.vue'
 
 // 当前激活的菜单项
 const activeMenu = ref('users')
+const isAdmin = ref(true)
+
+// 检查用户是否为管理员
+const checkAdminPermission = () => {
+  try {
+    const userInfo = JSON.parse(localStorage.getItem('userInfo'))
+    isAdmin.value = userInfo && userInfo.role === 'admin'
+    
+    if (!isAdmin.value) {
+      ElMessage.error('权限不足，只有管理员可以访问管理员中心')
+      return false
+    }
+    return true
+  } catch (error) {
+    ElMessage.error('用户信息错误，无法验证权限')
+    return false
+  }
+}
 
 // 处理菜单选择
 const handleMenuSelect = (index) => {
+  if (checkAdminPermission()) {
     activeMenu.value = index
+  }
 }
+
+// 组件挂载时检查权限
+onMounted(() => {
+  checkAdminPermission()
+})
 </script>
 
 <style scoped>

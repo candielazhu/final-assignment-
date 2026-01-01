@@ -84,7 +84,7 @@ const router = createRouter({
   routes
 })
 
-// 路由守卫，检查登录状态并设置页面标题
+// 路由守卫，检查登录状态和角色权限并设置页面标题
 router.beforeEach((to, from, next) => {
   // 设置页面标题
   const title = to.meta.title || 'CanDie'
@@ -95,7 +95,28 @@ router.beforeEach((to, from, next) => {
     // 检查是否已登录
     const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true' || getCookie('isLoggedIn') === 'true'
     if (isLoggedIn) {
-      next() // 已登录，继续访问
+      // 检查是否是管理员路由
+      if (to.path.includes('/admin')) {
+        try {
+          const userInfo = JSON.parse(localStorage.getItem('userInfo'))
+          if (userInfo && userInfo.role === 'admin') {
+            next() // 是管理员，允许访问
+          } else {
+            // 不是管理员，显示错误信息并重定向
+            import('element-plus').then(({ ElMessage }) => {
+              ElMessage.error('权限不足，只有管理员可以访问该页面')
+            })
+            next('/') // 重定向到首页
+          }
+        } catch (error) {
+          import('element-plus').then(({ ElMessage }) => {
+            ElMessage.error('用户信息错误，无法验证权限')
+          })
+          next('/') // 重定向到首页
+        }
+      } else {
+        next() // 非管理员路由，直接访问
+      }
     } else {
       // 如果是访问需要认证的页面但未登录，重定向到登录页
       next('/login')

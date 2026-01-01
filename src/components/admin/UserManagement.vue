@@ -300,6 +300,28 @@ const editForm = ref({
   bio: ''
 })
 
+// 获取当前登录用户信息
+const currentUser = ref(null)
+const isAdmin = ref(false)
+
+// 检查用户是否为管理员
+const checkAdminPermission = () => {
+  try {
+    const userInfo = JSON.parse(localStorage.getItem('userInfo'))
+    currentUser.value = userInfo
+    isAdmin.value = userInfo && userInfo.role === 'admin'
+    
+    if (!isAdmin.value) {
+      ElMessage.error('权限不足，只有管理员可以访问用户管理功能')
+      return false
+    }
+    return true
+  } catch (error) {
+    ElMessage.error('用户信息错误，无法验证权限')
+    return false
+  }
+}
+
 // 表单验证规则
 const editRules = ref({
   username: [
@@ -334,6 +356,10 @@ const formatDate = (dateString) => {
 
 // 获取用户列表
 const fetchUsers = async () => {
+  if (!checkAdminPermission()) {
+    return
+  }
+  
   loading.value = true
   try {
     const response = await axios.get('/users', {
@@ -359,6 +385,10 @@ const handleSearch = () => {
 
 // 显示创建用户对话框
 const showCreateDialog = () => {
+  if (!checkAdminPermission()) {
+    return
+  }
+  
   isCreateMode.value = true
   dialogTitle.value = '创建用户'
   editForm.value = {
@@ -375,6 +405,10 @@ const showCreateDialog = () => {
 
 // 编辑用户
 const editUser = (user) => {
+  if (!checkAdminPermission()) {
+    return
+  }
+  
   isCreateMode.value = false
   dialogTitle.value = '编辑用户信息'
   editForm.value = { ...user }
@@ -383,6 +417,10 @@ const editUser = (user) => {
 
 // 创建用户
 const createUser = async () => {
+  if (!checkAdminPermission()) {
+    return
+  }
+  
   submitting.value = true
   try {
     await axios.post('/users', editForm.value)
@@ -399,6 +437,10 @@ const createUser = async () => {
 
 // 更新用户
 const updateUser = async () => {
+  if (!checkAdminPermission()) {
+    return
+  }
+  
   submitting.value = true
   try {
     await axios.put(`/users/${editForm.value.id}`, editForm.value)
@@ -415,6 +457,10 @@ const updateUser = async () => {
 
 // 提交用户（创建或更新）
 const submitUser = async () => {
+  if (!checkAdminPermission()) {
+    return
+  }
+  
   if (!editFormRef.value) return
 
   await editFormRef.value.validate(async (valid) => {
@@ -430,6 +476,10 @@ const submitUser = async () => {
 
 // 删除用户
 const deleteUser = async (userId) => {
+  if (!checkAdminPermission()) {
+    return
+  }
+  
   try {
     await axios.delete(`/users/${userId}`)
     ElMessage.success('删除用户成功')
@@ -448,7 +498,7 @@ const handleClose = () => {
   dialogVisible.value = false
 }
 
-// 组件挂载时获取用户列表
+// 组件挂载时检查权限并获取用户列表
 onMounted(() => {
   fetchUsers()
 })
