@@ -1,30 +1,29 @@
 <template>
     <div class="article-management">
         <h2>文章管理</h2>
-        
+
         <!-- 搜索和添加按钮区域 -->
         <div class="article-management-header">
-            <el-input
-                v-model="searchQuery"
-                placeholder="搜索文章标题或作者"
-                clearable
-                @keyup.enter="fetchArticles"
-                class="search-input"
-            >
+            <el-input v-model="searchQuery" placeholder="搜索文章标题或作者" clearable @keyup.enter="fetchArticles"
+                class="search-input">
                 <template #append>
                     <el-button type="primary" @click="fetchArticles">
-                        <el-icon><Search /></el-icon>
+                        <el-icon>
+                            <Search />
+                        </el-icon>
                         搜索
                     </el-button>
                 </template>
             </el-input>
-            
+
             <el-button type="success" @click="openAddDialog">
-                <el-icon><Plus /></el-icon>
+                <el-icon>
+                    <Plus />
+                </el-icon>
                 添加文章
             </el-button>
         </div>
-        
+
         <!-- 文章列表表格 -->
         <el-table :data="articles" stripe style="width: 100%">
             <el-table-column prop="id" label="ID" width="80" />
@@ -44,92 +43,60 @@
             <el-table-column label="操作" width="200" fixed="right">
                 <template #default="scope">
                     <el-button type="primary" size="small" @click="openEditDialog(scope.row)">
-                        <el-icon><Edit /></el-icon>
+                        <el-icon>
+                            <Edit />
+                        </el-icon>
                         编辑
                     </el-button>
                     <el-button type="danger" size="small" @click="deleteArticle(scope.row.id)">
-                        <el-icon><Delete /></el-icon>
+                        <el-icon>
+                            <Delete />
+                        </el-icon>
                         删除
                     </el-button>
                 </template>
             </el-table-column>
+
         </el-table>
-        
+        <el-empty description="功能开发中" />
+
         <!-- 分页组件 -->
         <div class="pagination-container">
-            <el-pagination
-                v-model:current-page="currentPage"
-                v-model:page-size="pageSize"
-                :page-sizes="[10, 20, 50, 100]"
-                layout="total, sizes, prev, pager, next, jumper"
-                :total="total"
-            />
+            <el-pagination v-model:current-page="currentPage" v-model:page-size="pageSize"
+                :page-sizes="[10, 20, 50, 100]" layout="total, sizes, prev, pager, next, jumper" :total="total" />
         </div>
-        
+
         <!-- 添加/编辑文章对话框 -->
-        <el-dialog
-            v-model="dialogVisible"
-            :title="dialogTitle"
-            width="60%"
-        >
-            <el-form
-                ref="articleFormRef"
-                :model="articleForm"
-                :rules="articleFormRules"
-                label-width="100px"
-            >
+        <el-dialog v-model="dialogVisible" :title="dialogTitle" width="60%">
+            <el-form ref="articleFormRef" :model="articleForm" :rules="articleFormRules" label-width="100px">
                 <el-form-item label="标题" prop="title">
-                    <el-input
-                        v-model="articleForm.title"
-                        placeholder="请输入文章标题"
-                        clearable
-                    />
+                    <el-input v-model="articleForm.title" placeholder="请输入文章标题" clearable />
                 </el-form-item>
-                
+
                 <el-form-item label="分类" prop="category_id">
-                    <el-select
-                        v-model="articleForm.category_id"
-                        placeholder="请选择分类"
-                        clearable
-                    >
-                        <el-option
-                            v-for="category in categories"
-                            :key="category.id"
-                            :label="category.name"
-                            :value="category.id"
-                        />
+                    <el-select v-model="articleForm.category_id" placeholder="请选择分类" clearable>
+                        <el-option v-for="category in categories" :key="category.id" :label="category.name"
+                            :value="category.id" />
                     </el-select>
                 </el-form-item>
-                
+
                 <el-form-item label="状态" prop="status">
-                    <el-select
-                        v-model="articleForm.status"
-                        placeholder="请选择状态"
-                    >
+                    <el-select v-model="articleForm.status" placeholder="请选择状态">
                         <el-option label="草稿" value="draft" />
                         <el-option label="已发布" value="published" />
                     </el-select>
                 </el-form-item>
-                
+
                 <el-form-item label="摘要" prop="summary">
-                    <el-input
-                        v-model="articleForm.summary"
-                        placeholder="请输入文章摘要"
-                        type="textarea"
-                        rows="3"
-                    />
+                    <el-input v-model="articleForm.summary" placeholder="请输入文章摘要" type="textarea" rows="3" />
                 </el-form-item>
-                
+
                 <el-form-item label="内容" prop="content">
-                    <el-input
-                        v-model="articleForm.content"
-                        placeholder="请输入文章内容（支持Markdown）"
-                        type="textarea"
-                        rows="10"
-                    />
+                    <el-input v-model="articleForm.content" placeholder="请输入文章内容（支持Markdown）" type="textarea"
+                        rows="10" />
                 </el-form-item>
             </el-form>
-            
+
             <template #footer>
                 <span class="dialog-footer">
                     <el-button @click="dialogVisible = false">取消</el-button>
@@ -269,7 +236,7 @@ const resetForm = () => {
 // 保存文章
 const saveArticle = async () => {
     if (!articleFormRef.value) return
-    
+
     await articleFormRef.value.validate(async (valid) => {
         if (valid) {
             try {

@@ -1,15 +1,10 @@
 <template>
     <div class="admin-container">
         <h1>管理员中心</h1>
-        
+
         <!-- 管理员功能导航 -->
         <div class="admin-nav">
-            <el-menu
-                :default-active="activeMenu"
-                class="admin-menu"
-                mode="horizontal"
-                @select="handleMenuSelect"
-            >
+            <el-menu :default-active="activeMenu" class="admin-menu" mode="horizontal" @select="handleMenuSelect">
                 <el-menu-item index="users">用户管理</el-menu-item>
                 <el-menu-item index="articles">文章管理</el-menu-item>
                 <el-menu-item index="comments">评论管理</el-menu-item>
@@ -64,6 +59,7 @@ const handleMenuSelect = (index) => {
     background-color: var(--bg-tertiary);
     border-radius: var(--border-radius-md);
     padding: 0 var(--spacing-md);
+    --el-menu-text-color: var(--text-primary);
 }
 
 .management-section {
